@@ -1,7 +1,7 @@
 <template>
   <div class="page" data-name="home">
     <!-- Top Navbar -->
-    <div class="navbar">
+    <div class="navbar navbar-large navbar-transparent">
       <div class="navbar-bg"></div>
       <div class="navbar-inner">
         <div class="left">
@@ -32,13 +32,13 @@
     <!-- Categories -->
     <div class="categories-scrollbar">
       <div class="categories">
-        <a href="#" class="category-chip active">All</a>
-        <a href="#" class="category-chip">Nature</a>
-        <a href="#" class="category-chip">Abstract</a>
-        <a href="#" class="category-chip">Minimal</a>
-        <a href="#" class="category-chip">Dark</a>
-        <a href="#" class="category-chip">Anime</a>
-        <a href="#" class="category-chip">Space</a>
+        ${categories.map((category) => $h`
+          <a href="#" 
+             class="category-chip ${currentCategory === category.id ? 'active' : ''}"
+             @click=${() => handleCategoryClick(category.id)}>
+            ${category.name}
+          </a>
+        `)}
       </div>
     </div>
 
@@ -105,10 +105,61 @@ export default (props, { $f7, $store, $on, $update }) => {
   let page = 1;
   let noMoreItems = false;
   let searchTimeout;
-  let originalWallpapers = []; // Store original wallpapers
+  let originalWallpapers = [];
+  let currentCategory = 'all';
+  
+  // Define categories with proper API values
+  const categories = [
+    { id: 'all', name: 'All' },
+    { id: 'general', name: 'General' },
+    { id: 'anime', name: 'Anime' },
+    { id: 'people', name: 'People' }
+  ];
 
   // Load initial wallpapers
   loadWallpapers();
+
+  async function handleCategoryClick(categoryId) {
+    console.log('Category clicked:', categoryId); // Debug log
+    
+    if (currentCategory === categoryId) return;
+    
+    $f7.preloader.show();
+    
+    try {
+      currentCategory = categoryId;
+      page = 1;
+      wallpapers = [];
+      noMoreItems = false;
+      $update();
+      
+      console.log('Fetching category:', currentCategory); // Debug log
+      
+      const newWallpapers = await $store.dispatch('fetchWallpapers', { 
+        page,
+        category: currentCategory
+      });
+      
+      console.log('New wallpapers:', newWallpapers); // Debug log
+      
+      if (newWallpapers && newWallpapers.length > 0) {
+        wallpapers = newWallpapers;
+        originalWallpapers = [...newWallpapers];
+        page += 1;
+      } else {
+        noMoreItems = true;
+      }
+    } catch (error) {
+      console.error('Error loading category:', error);
+      $f7.toast.show({
+        text: 'Error loading category',
+        closeTimeout: 2000,
+      });
+    } finally {
+      $f7.preloader.hide();
+      $update();
+    }
+  }
 
   async function loadWallpapers(reset = false) {
     if (loading || (noMoreItems && !reset)) return;
@@ -123,17 +174,21 @@ export default (props, { $f7, $store, $on, $update }) => {
         noMoreItems = false;
       }
 
-      console.log('Fetching wallpapers for page:', page);
-      const newWallpapers = await $store.dispatch('fetchWallpapers', { page });
-      console.log('Received wallpapers:', newWallpapers);
+      const newWallpapers = await $store.dispatch('fetchWallpapers', { 
+        page,
+        category: currentCategory === 'all' ? null : currentCategory
+      });
       
       if (!newWallpapers || newWallpapers.length === 0) {
         noMoreItems = true;
       } else {
-        wallpapers = [...wallpapers, ...newWallpapers];
-        // Store original wallpapers when loading initial or reset
+        // If resetting or first page, replace wallpapers
         if (reset || page === 1) {
-          originalWallpapers = [...wallpapers];
+          wallpapers = newWallpapers;
+          originalWallpapers = [...newWallpapers];
+        } else {
+          // Otherwise append new wallpapers
+          wallpapers = [...wallpapers, ...newWallpapers];
         }
         page += 1;
       }
@@ -232,6 +287,30 @@ export default (props, { $f7, $store, $on, $update }) => {
     });
   });
 
+  // Hide navbar on scroll
+  $on('pageInit', () => {
+    const $pageContent = $f7.$('.page-content');
+    let lastScrollTop = 0;
+    
+    $pageContent.on('scroll', (e) => {
+      const scrollTop = e.target.scrollTop;
+      const $navbar = $f7.$('.navbar');
+      const $categoriesBar = $f7.$('.categories-scrollbar');
+      
+      if (scrollTop > lastScrollTop && scrollTop > 100) {
+        // Scrolling down
+        $navbar.addClass('navbar-hidden');
+        $categoriesBar.addClass('categories-hidden');
+      } else {
+        // Scrolling up
+        $navbar.removeClass('navbar-hidden');
+        $categoriesBar.removeClass('categories-hidden');
+      }
+      
+      lastScrollTop = scrollTop;
+    });
+  });
+
   // Cleanup on page leave
   $on('pageBeforeOut', () => {
     if (!infiniteScrollDetached) {
@@ -289,18 +368,21 @@ export default (props, { $f7, $store, $on, $update }) => {
 }
 
 .category-chip {
-  padding: 6px 16px;
+  padding: 8px 16px;
   border-radius: 100px;
   background: #f5f5f5;
   color: #666;
   font-size: 14px;
   white-space: nowrap;
   transition: all 0.3s ease;
+  margin: 0 4px;
+  text-decoration: none;
 }
 
 .category-chip.active {
   background: var(--f7-theme-color);
   color: #fff;
+  font-weight: 500;
 }
 
 .wallpapers-grid {
@@ -461,5 +543,43 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 .progressive-image.loaded .full-image {
   opacity: 1;
+}
+
+.navbar, .categories-scrollbar {
+  transition: transform 0.3s ease;
+}
+
+.navbar.navbar-hidden {
+  transform: translateY(-100%);
+}
+
+.categories-scrollbar {
+  position: sticky;
+  top: var(--f7-navbar-height);
+  z-index: 100;
+  background: #fff;
+  transition: transform 0.3s ease;
+}
+
+.categories-scrollbar.categories-hidden {
+  transform: translateY(-100%);
+}
+
+.category-chip {
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  margin: 0 4px;
+  text-decoration: none;
+}
+
+.category-chip.active {
+  background: var(--f7-theme-color);
+  color: #fff;
+  font-weight: 500;
 }
 </style>

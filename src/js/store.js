@@ -7,14 +7,31 @@ const store = createStore({
   },
   
   actions: {
-    async fetchWallpapers({ state }, { page = 1 }) {
+    async fetchWallpapers({ state }, { page = 1, category = null }) {
       try {
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(
-          `https://wallhaven.cc/api/v1/search?page=${page}`
-        )}`);
+        // Build category parameter according to Wallhaven API
+        let categoryParam = '';
+        switch(category) {
+          case 'general':
+            categoryParam = '100';
+            break;
+          case 'anime':
+            categoryParam = '010';
+            break;
+          case 'people':
+            categoryParam = '001';
+            break;
+          default:
+            categoryParam = '111'; // All categories
+        }
+
+        let url = `https://wallhaven.cc/api/v1/search?page=${page}&categories=${categoryParam}`;
+        console.log('Fetching URL:', url); // Debug log
+        
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
         
         const data = await response.json();
-        console.log('API Response:', data);
+        console.log('Category response:', data); // Debug log
 
         return data.data.map(wallpaper => {
           const placeholderUrl = `https://wsrv.nl/?url=${encodeURIComponent(wallpaper.thumbs.small)}&w=100&blur=5`;
@@ -34,7 +51,8 @@ const store = createStore({
             resolution: wallpaper.resolution,
             category: wallpaper.category,
             views: wallpaper.views,
-            favorites: wallpaper.favorites
+            favorites: wallpaper.favorites,
+            loaded: false
           };
         });
         
