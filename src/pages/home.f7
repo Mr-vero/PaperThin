@@ -30,7 +30,7 @@
     <div class="searchbar-overlay"></div>
 
     <!-- Scrollable page content-->
-    <div class="page-content ptr-content infinite-scroll-content" 
+    <div class="page-content ptr-content infinite-scroll-content ${selectionMode ? 'selection-mode' : ''}" 
          @ptr:refresh=${onRefresh} 
          @infinite=${loadMore}
          data-infinite-distance="50">
@@ -44,7 +44,16 @@
       <!-- Wallpapers Grid -->
       <div class="wallpapers-grid">
         ${wallpapers.map((wallpaper) => $h`
-          <div class="wallpaper-item elevation-2" @click=${()=> openWallpaper(wallpaper)}>
+          <div class="wallpaper-item elevation-2" 
+               @click=${selectionMode ? () => toggleSelection(wallpaper) : () => openWallpaper(wallpaper)}
+               @touchstart=${(e) => handleTouchStart(e, wallpaper)}
+               @touchend=${handleTouchEnd}
+               @touchmove=${handleTouchMove}>
+            ${selectionMode && $h`
+              <div class="selection-checkbox ${selectedWallpapers.includes(wallpaper) ? 'selected' : ''}">
+                <i class="icon f7-icons">checkmark_circle_fill</i>
+              </div>
+            `}
             <div class="progressive-image ${wallpaper.loaded ? 'loaded' : ''}">
               <img 
                 class="placeholder"
@@ -96,6 +105,21 @@
         `)}
       </div>
     </div>
+
+    <!-- Selection mode toolbar -->
+    ${selectionMode && $h`
+      <div class="toolbar toolbar-bottom selection-toolbar">
+        <div class="toolbar-inner">
+          <a href="#" class="link" @click=${() => addToCollection()}>
+            <i class="icon f7-icons">plus_square_fill</i>
+            <span>Add to Collection</span>
+          </a>
+          <a href="#" class="link" @click=${() => cancelSelection()}>
+            <span>Cancel</span>
+          </a>
+        </div>
+      </div>
+    `}
   </div>
 </template>
 
@@ -108,6 +132,10 @@ export default (props, { $f7, $store, $on, $update }) => {
   let searchTimeout;
   let originalWallpapers = [];
   let currentCategory = 'all';
+  let selectionMode = false;
+  let selectedWallpapers = [];
+  let longPressTimer;
+  let touchMoved = false;
   
   // Define categories with proper API values
   const categories = [
@@ -329,6 +357,108 @@ export default (props, { $f7, $store, $on, $update }) => {
       infiniteScrollDetached = true;
     }
   });
+
+  function enableSelectionMode(wallpaper) {
+    selectionMode = true;
+    selectedWallpapers = [wallpaper];
+    // Hide main toolbar
+    document.querySelector('.toolbar.tabbar-icons').classList.add('toolbar-hidden');
+    $update();
+  }
+
+  function toggleSelection(wallpaper) {
+    const index = selectedWallpapers.indexOf(wallpaper);
+    if (index > -1) {
+      selectedWallpapers.splice(index, 1);
+    } else {
+      selectedWallpapers.push(wallpaper);
+    }
+    if (selectedWallpapers.length === 0) {
+      selectionMode = false;
+    }
+    $update();
+  }
+
+  async function addToCollection() {
+    const collections = await $store.dispatch('fetchCollections');
+    
+    if (collections.length === 0) {
+      $f7.dialog.prompt('Collection Name', 'New Collection', async (name) => {
+        if (name.trim()) {
+          const collection = await $store.dispatch('createCollection', { name });
+          await $store.dispatch('addToCollection', {
+            collectionId: collection.id,
+            wallpapers: selectedWallpapers
+          });
+          // Show main toolbar
+          document.querySelector('.toolbar.tabbar-icons').classList.remove('toolbar-hidden');
+          cancelSelection();
+        }
+      });
+      return;
+    }
+
+    const actions = collections.map(c => ({
+      text: c.name,
+      onClick: async () => {
+        await $store.dispatch('addToCollection', {
+          collectionId: c.id,
+          wallpapers: selectedWallpapers
+        });
+        cancelSelection();
+      }
+    }));
+
+    actions.push({
+      text: 'New Collection',
+      onClick: () => {
+        $f7.dialog.prompt('Collection Name', 'New Collection', async (name) => {
+          if (name.trim()) {
+            const collection = await $store.dispatch('createCollection', { name });
+            await $store.dispatch('addToCollection', {
+              collectionId: collection.id,
+              wallpapers: selectedWallpapers
+            });
+            cancelSelection();
+          }
+        });
+      }
+    });
+
+    $f7.actions.create({
+      buttons: actions
+    }).open();
+  }
+
+  function cancelSelection() {
+    selectionMode = false;
+    selectedWallpapers = [];
+    // Show main toolbar
+    document.querySelector('.toolbar.tabbar-icons').classList.remove('toolbar-hidden');
+    $update();
+  }
+
+  function handleTouchStart(e, wallpaper) {
+    touchMoved = false;
+    longPressTimer = setTimeout(() => {
+      if (!touchMoved) {
+        enableSelectionMode(wallpaper);
+        // Add haptic feedback if available
+        if (window.navigator && window.navigator.vibrate) {
+          window.navigator.vibrate(50);
+        }
+      }
+    }, 500); // 500ms for long press
+  }
+
+  function handleTouchEnd() {
+    clearTimeout(longPressTimer);
+  }
+
+  function handleTouchMove() {
+    touchMoved = true;
+    clearTimeout(longPressTimer);
+  }
 
   return $render;
 }
@@ -640,5 +770,59 @@ export default (props, { $f7, $store, $on, $update }) => {
 .category-chip[data-category="nsfw"].active {
   background: #ff4b3e;
   color: white;
+}
+
+.selection-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.selection-checkbox i {
+  font-size: 24px;
+  color: var(--f7-theme-color);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.selection-checkbox.selected i {
+  opacity: 1;
+}
+
+/* Add a subtle overlay when in selection mode */
+.wallpaper-item {
+  position: relative;
+}
+
+.wallpaper-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* New class for selection mode */
+.selection-mode .wallpaper-item::after {
+  opacity: 1;
+}
+
+/* Add this CSS for the selection toolbar */
+.toolbar.selection-toolbar {
+  z-index: 6000; /* Higher than the main toolbar */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.9);
+  border-top: none;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 </style>

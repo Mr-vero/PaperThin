@@ -1,4 +1,3 @@
-
 <template>
   <div id="app">
 
@@ -38,22 +37,23 @@
     <!-- Views/Tabs container -->
     <div class="views tabs safe-areas">
       <!-- Tabbar for switching views-tabs -->
-      <div class="toolbar toolbar-bottom tabbar-icons no-outline">
+      <div class="toolbar toolbar-bottom tabbar-icons">
         <div class="toolbar-inner">
           <a href="#view-home" class="tab-link tab-link-active">
-            <i class="icon f7-icons if-not-md">house_fill</i>
-            <i class="icon material-icons if-md">home</i>
-            <span class="tabbar-label">Home</span>
+            <i class="icon f7-icons">square_grid_2x2_fill</i>
+            <span class="tabbar-label">Gallery</span>
+          </a>
+          <a href="#view-collections" class="tab-link">
+            <i class="icon f7-icons">rectangle_stack_fill</i>
+            <span class="tabbar-label">Collections</span>
           </a>
           <a href="#view-catalog" class="tab-link">
-            <i class="icon f7-icons if-not-md">square_list_fill</i>
-            <i class="icon material-icons if-md">view_list</i>
-            <span class="tabbar-label">Catalog</span>
+            <i class="icon f7-icons">star_circle_fill</i>
+            <span class="tabbar-label">Featured</span>
           </a>
           <a href="#view-settings" class="tab-link">
-            <i class="icon f7-icons if-not-md">gear</i>
-            <i class="icon material-icons if-md">settings</i>
-            <span class="tabbar-label">Settings</span>
+            <i class="icon f7-icons">person_crop_circle</i>
+            <span class="tabbar-label">Profile</span>
           </a>
         </div>
       </div>
@@ -71,6 +71,11 @@
       <!-- Settings View -->
       <div id="view-settings" class="view view-init tab" data-name="settings" data-url="/settings/">
         <!-- Settings page will be loaded here dynamically from /settings/ route -->
+      </div>
+
+      <!-- Collections View -->
+      <div id="view-collections" class="view view-init tab" data-name="collections" data-url="/collections/">
+        <!-- Collections page will be loaded here dynamically from /collections/ route -->
       </div>
     </div>
 
@@ -164,3 +169,35 @@
     return $render;
   }
 </script>
+<style>
+.toolbar.toolbar-bottom {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.8);
+  border-top: none;
+  padding-bottom: env(safe-area-inset-bottom);
+  transition: transform 0.3s ease;
+}
+
+.toolbar.toolbar-bottom.toolbar-hidden {
+  transform: translateY(100%);
+}
+
+.toolbar .tab-link {
+  transition: all 0.3s ease;
+}
+
+.toolbar .tab-link-active {
+  transform: scale(1.1);
+}
+
+.toolbar .tab-link i.icon {
+  font-size: 22px;
+  margin-bottom: 2px;
+}
+
+.toolbar .tabbar-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+</style>

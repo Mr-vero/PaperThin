@@ -4,6 +4,7 @@ const store = createStore({
   state: {
     wallpapers: [],
     loading: false,
+    collections: [],
   },
   
   actions: {
@@ -184,6 +185,34 @@ const store = createStore({
         return [];
       } finally {
         state.loading = false;
+      }
+    },
+
+    async fetchCollections({ state }) {
+      // Get collections from localStorage or API
+      const collections = JSON.parse(localStorage.getItem('collections') || '[]');
+      state.collections = collections;
+      return collections;
+    },
+
+    async createCollection({ state }, { name }) {
+      const collection = {
+        id: Date.now().toString(),
+        name,
+        wallpapers: [],
+        created: new Date().toISOString()
+      };
+      
+      state.collections.push(collection);
+      localStorage.setItem('collections', JSON.stringify(state.collections));
+      return collection;
+    },
+
+    async addToCollection({ state }, { collectionId, wallpapers }) {
+      const collection = state.collections.find(c => c.id === collectionId);
+      if (collection) {
+        collection.wallpapers.push(...wallpapers);
+        localStorage.setItem('collections', JSON.stringify(state.collections));
       }
     }
   }

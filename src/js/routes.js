@@ -5,7 +5,7 @@ import CatalogPage from '../pages/catalog.f7';
 import ProductPage from '../pages/product.f7';
 import SettingsPage from '../pages/settings.f7';
 import WallpaperPage from '../pages/wallpaper.f7';
-
+import CollectionsPage from '../pages/collections.f7';
 import DynamicRoutePage from '../pages/dynamic-route.f7';
 import RequestAndLoad from '../pages/request-and-load.f7';
 import NotFoundPage from '../pages/404.f7';
@@ -14,6 +14,10 @@ var routes = [
   {
     path: '/',
     component: HomePage,
+  },
+  {
+    path: '/collections/',
+    component: CollectionsPage,
   },
   {
     path: '/about/',
