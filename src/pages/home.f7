@@ -105,6 +105,7 @@ export default (props, { $f7, $store, $on, $update }) => {
   let page = 1;
   let noMoreItems = false;
   let infiniteScrollDetached = false;
+  let searchTimeout;
 
   // Load initial wallpapers
   loadWallpapers();
@@ -193,12 +194,36 @@ export default (props, { $f7, $store, $on, $update }) => {
     const searchbar = $f7.searchbar.create({
       el: '.searchbar-wallpapers',
       searchContainer: '.wallpapers-grid',
-      searchIn: '.wallpaper-item img',
+      searchIn: '.wallpaper-item',
+      customSearch: true,
       on: {
-        search(sb, query) {
+        search(sb, query, previousQuery) {
           if (query.length > 2) {
-            $store.dispatch('searchWallpapers', query);
+            // Show loading indicator
+            $f7.preloader.show();
+            
+            // Debounce search to prevent too many requests
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+              try {
+                const searchResults = await $store.dispatch('searchWallpapers', query);
+                // Update the wallpapers array with search results
+                wallpapers = searchResults;
+                page = 1;
+                noMoreItems = true; // Disable infinite scroll for search results
+                $update(); // Force re-render
+              } finally {
+                $f7.preloader.hide();
+              }
+            }, 300);
           }
+        },
+        clear(sb) {
+          // Reset to initial wallpapers when search is cleared
+          wallpapers = [];
+          page = 1;
+          noMoreItems = false;
+          loadWallpapers(true);
         }
       }
     });
