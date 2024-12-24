@@ -13,55 +13,86 @@ const store = createStore({
         let params = new URLSearchParams({
           page: page.toString(),
           categories: '111', // Default to all categories
-          q: '' // Initialize empty search query
+          purity: '100', // 1 = sfw, 1 = sketchy, 0 = nsfw (100 = sfw only)
+          q: '', // Initialize empty search query
+          sorting: 'toplist',
+          order: 'desc',
+          topRange: '1M'
         });
 
         // Add category-specific search terms
         if (category && category !== 'all') {
           switch(category) {
+            case 'nsfw':
+              params.set('purity', '001'); // Enable NSFW content
+              params.set('categories', '111');
+              break;
+            case 'sketchy':
+              params.set('purity', '010'); // Enable Sketchy content
+              params.set('categories', '111');
+              break;
             case 'landscape':
               params.set('q', 'landscape');
+              params.set('sorting', 'relevance');
               break;
             case 'space':
               params.set('q', 'space OR galaxy OR cosmos');
+              params.set('sorting', 'relevance');
               break;
             case 'digital':
               params.set('q', 'digital art');
+              params.set('sorting', 'relevance');
               break;
             case 'minimal':
               params.set('q', 'minimal OR minimalist');
+              params.set('sorting', 'relevance');
               break;
             case 'nature':
               params.set('q', 'nature');
+              params.set('sorting', 'relevance');
               break;
             case 'cars':
               params.set('q', 'car OR cars OR supercar');
+              params.set('sorting', 'relevance');
               break;
             case 'gaming':
               params.set('q', 'gaming OR game');
+              params.set('sorting', 'relevance');
               break;
             case 'technology':
               params.set('q', 'technology OR tech');
+              params.set('sorting', 'relevance');
               break;
             case 'general':
               params.set('categories', '100');
+              params.set('sorting', 'toplist');
               break;
             case 'anime':
               params.set('categories', '010');
+              params.set('sorting', 'toplist');
               break;
             case 'people':
               params.set('categories', '001');
+              params.set('sorting', 'toplist');
               break;
           }
         }
+
+        // Add quality filters
+        params.append('atleast', '1920x1080');
+        params.append('ratios', '16x9,16x10');
 
         let url = `https://wallhaven.cc/api/v1/search?${params.toString()}`;
         console.log('Fetching URL:', url);
         
         const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
         
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
-        console.log('Category response:', data); // Debug log
+        console.log('API Response:', data);
 
         return data.data.map(wallpaper => {
           const placeholderUrl = `https://wsrv.nl/?url=${encodeURIComponent(wallpaper.thumbs.small)}&w=100&blur=5`;

@@ -18,6 +18,21 @@ import store from './store.js';
 // Import main app component
 import App from '../app.f7';
 
+// Register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js', {
+        scope: '/',
+        type: 'module'
+      });
+      console.log('ServiceWorker registration successful with scope:', registration.scope);
+    } catch (err) {
+      console.error('ServiceWorker registration failed:', err);
+    }
+  });
+}
+
 var device = getDevice();
 var app = new Framework7({
   name: 'Paper Thin', // App name
@@ -37,6 +52,7 @@ var app = new Framework7({
   // Register service worker (only on production build)
   serviceWorker: process.env.NODE_ENV ==='production' ? {
     path: '/service-worker.js',
+    scope: '/'
   } : {},
   // Input settings
   input: {

@@ -35,6 +35,7 @@
         ${categories.map((category) => $h`
           <a href="#" 
              class="category-chip ${currentCategory === category.id ? 'active' : ''}"
+             data-category="${category.id}"
              @click=${() => handleCategoryClick(category.id)}>
             ${category.name}
           </a>
@@ -121,7 +122,9 @@ export default (props, { $f7, $store, $on, $update }) => {
     { id: 'nature', name: 'Nature' },
     { id: 'cars', name: 'Cars' },
     { id: 'gaming', name: 'Gaming' },
-    { id: 'technology', name: 'Technology' }
+    { id: 'technology', name: 'Technology' },
+    { id: 'sketchy', name: '🔞 Sketchy' },
+    { id: 'nsfw', name: '🔞 NSFW' }
   ];
 
   // Load initial wallpapers
@@ -606,5 +609,17 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 .page-content {
   padding-top: 0 !important;
+}
+
+.category-chip[data-category="sketchy"],
+.category-chip[data-category="nsfw"] {
+  background: #ff4b3e15;
+  color: #ff4b3e;
+}
+
+.category-chip[data-category="sketchy"].active,
+.category-chip[data-category="nsfw"].active {
+  background: #ff4b3e;
+  color: white;
 }
 </style>
