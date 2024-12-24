@@ -9,24 +9,54 @@ const store = createStore({
   actions: {
     async fetchWallpapers({ state }, { page = 1, category = null }) {
       try {
-        // Build category parameter according to Wallhaven API
-        let categoryParam = '';
-        switch(category) {
-          case 'general':
-            categoryParam = '100';
-            break;
-          case 'anime':
-            categoryParam = '010';
-            break;
-          case 'people':
-            categoryParam = '001';
-            break;
-          default:
-            categoryParam = '111'; // All categories
+        // Build query parameters
+        let params = new URLSearchParams({
+          page: page.toString(),
+          categories: '111', // Default to all categories
+          q: '' // Initialize empty search query
+        });
+
+        // Add category-specific search terms
+        if (category && category !== 'all') {
+          switch(category) {
+            case 'landscape':
+              params.set('q', 'landscape');
+              break;
+            case 'space':
+              params.set('q', 'space OR galaxy OR cosmos');
+              break;
+            case 'digital':
+              params.set('q', 'digital art');
+              break;
+            case 'minimal':
+              params.set('q', 'minimal OR minimalist');
+              break;
+            case 'nature':
+              params.set('q', 'nature');
+              break;
+            case 'cars':
+              params.set('q', 'car OR cars OR supercar');
+              break;
+            case 'gaming':
+              params.set('q', 'gaming OR game');
+              break;
+            case 'technology':
+              params.set('q', 'technology OR tech');
+              break;
+            case 'general':
+              params.set('categories', '100');
+              break;
+            case 'anime':
+              params.set('categories', '010');
+              break;
+            case 'people':
+              params.set('categories', '001');
+              break;
+          }
         }
 
-        let url = `https://wallhaven.cc/api/v1/search?page=${page}&categories=${categoryParam}`;
-        console.log('Fetching URL:', url); // Debug log
+        let url = `https://wallhaven.cc/api/v1/search?${params.toString()}`;
+        console.log('Fetching URL:', url);
         
         const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
         

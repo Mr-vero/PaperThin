@@ -113,7 +113,15 @@ export default (props, { $f7, $store, $on, $update }) => {
     { id: 'all', name: 'All' },
     { id: 'general', name: 'General' },
     { id: 'anime', name: 'Anime' },
-    { id: 'people', name: 'People' }
+    { id: 'people', name: 'People' },
+    { id: 'landscape', name: 'Landscape' },
+    { id: 'space', name: 'Space' },
+    { id: 'digital', name: 'Digital Art' },
+    { id: 'minimal', name: 'Minimal' },
+    { id: 'nature', name: 'Nature' },
+    { id: 'cars', name: 'Cars' },
+    { id: 'gaming', name: 'Gaming' },
+    { id: 'technology', name: 'Technology' }
   ];
 
   // Load initial wallpapers
@@ -361,6 +369,7 @@ export default (props, { $f7, $store, $on, $update }) => {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  scroll-behavior: smooth;
 }
 
 .categories::-webkit-scrollbar {
@@ -377,6 +386,12 @@ export default (props, { $f7, $store, $on, $update }) => {
   transition: all 0.3s ease;
   margin: 0 4px;
   text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.category-chip:active {
+  transform: scale(0.95);
 }
 
 .category-chip.active {
