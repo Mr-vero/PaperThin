@@ -1,0 +1,26 @@
+{
+  "cwd": "/Users/whitmanwendelken/Projects/PaperThin",
+  "type": [
+    "pwa",
+    "capacitor"
+  ],
+  "name": "Paper Thin",
+  "framework": "core",
+  "template": "tabs",
+  "bundler": "vite",
+  "cssPreProcessor": false,
+  "theming": {
+    "customColor": true,
+    "color": "#ff4b3e",
+    "darkMode": false,
+    "iconFonts": true
+  },
+  "customBuild": false,
+  "pkg": "io.framework7.myapp",
+  "capacitor": {
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  }
+}

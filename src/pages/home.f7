@@ -1,0 +1,208 @@
+<template>
+  <div class="page" data-name="home">
+    <!-- Top Navbar -->
+    <div class="navbar navbar-large">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner">
+        <div class="left">
+          <a href="#" class="link icon-only panel-open" data-panel="left">
+            <i class="icon f7-icons if-not-md">menu</i>
+            <i class="icon material-icons if-md">menu</i>
+          </a>
+        </div>
+        <div class="title sliding">Wallpaper Hub</div>
+        <div class="right">
+          <a href="#" class="link icon-only searchbar-enable" data-searchbar=".searchbar-wallpapers">
+            <i class="icon f7-icons if-not-md">search</i>
+            <i class="icon material-icons if-md">search</i>
+          </a>
+        </div>
+        <div class="title-large">
+          <div class="title-large-text">Wallpaper Hub</div>
+        </div>
+        <form class="searchbar searchbar-wallpapers">
+          <div class="searchbar-inner">
+            <div class="searchbar-input-wrap">
+              <input type="search" placeholder="Search wallpapers"/>
+              <i class="searchbar-icon"></i>
+              <span class="input-clear-button"></span>
+            </div>
+            <span class="searchbar-disable-button">Cancel</span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Scrollable page content-->
+    <div class="page-content ptr-content infinite-scroll-content" 
+         @ptr:refresh=${onRefresh} 
+         @infinite=${loadMore}
+         data-infinite-distance="50">
+      <div class="searchbar-backdrop"></div>
+      
+      <!-- Pull to refresh preloader -->
+      <div class="ptr-preloader">
+        <div class="preloader"></div>
+        <div class="ptr-arrow"></div>
+      </div>
+      
+      <!-- Wallpapers Grid -->
+      <div class="wallpapers-grid">
+        ${wallpapers.map((wallpaper) => $h`
+          <div class="wallpaper-item" @click=${()=> openWallpaper(wallpaper)}>
+            <img src="${wallpaper.thumbnailUrl}" loading="lazy" alt="${wallpaper.title}"/>
+          </div>
+        `)}
+      </div>
+
+      <!-- Loading spinner -->
+      ${loading && $h`
+        <div class="preloader infinite-scroll-preloader"></div>
+      `}
+
+      ${noMoreItems && $h`
+        <div class="block block-strong text-align-center">
+          <span>No more wallpapers</span>
+        </div>
+      `}
+    </div>
+  </div>
+</template>
+
+<script>
+export default (props, { $f7, $store, $on, $update }) => {
+  let wallpapers = [];
+  let loading = false;
+  let page = 1;
+  let noMoreItems = false;
+  let infiniteScrollDetached = false;
+
+  // Load initial wallpapers
+  loadWallpapers();
+
+  async function loadWallpapers(reset = false) {
+    if (loading || (noMoreItems && !reset)) return;
+    
+    loading = true;
+    $update();
+
+    try {
+      if (reset) {
+        page = 1;
+        wallpapers = [];
+        noMoreItems = false;
+        if (infiniteScrollDetached) {
+          $f7.infiniteScroll.attach('.infinite-scroll-content');
+          infiniteScrollDetached = false;
+        }
+      }
+
+      console.log('Fetching wallpapers for page:', page);
+      const newWallpapers = await $store.dispatch('fetchWallpapers', { page });
+      console.log('Received wallpapers:', newWallpapers);
+      
+      if (!newWallpapers || newWallpapers.length === 0) {
+        noMoreItems = true;
+        if (!infiniteScrollDetached) {
+          $f7.infiniteScroll.detach('.infinite-scroll-content');
+          infiniteScrollDetached = true;
+        }
+      } else {
+        wallpapers = [...wallpapers, ...newWallpapers];
+        page += 1;
+      }
+    } catch (error) {
+      console.error('Error in loadWallpapers:', error);
+      $f7.toast.show({
+        text: 'Error loading wallpapers',
+        closeTimeout: 2000,
+      });
+    }
+
+    loading = false;
+    $update();
+  }
+
+  function loadMore(e, done) {
+    loadWallpapers().then(() => {
+      if (done) done();
+    });
+  }
+
+  function onRefresh(e, done) {
+    loadWallpapers(true).then(() => {
+      done();
+    });
+  }
+
+  function openWallpaper(wallpaper) {
+    $f7.views.main.router.navigate('/wallpaper/', {
+      props: {
+        wallpaper
+      }
+    });
+  }
+
+  // Initialize searchbar
+  $on('pageInit', () => {
+    const searchbar = $f7.searchbar.create({
+      el: '.searchbar-wallpapers',
+      searchContainer: '.wallpapers-grid',
+      searchIn: '.wallpaper-item img',
+      on: {
+        search(sb, query) {
+          if (query.length > 2) {
+            $store.dispatch('searchWallpapers', query);
+          }
+        }
+      }
+    });
+  });
+
+  // Cleanup on page leave
+  $on('pageBeforeOut', () => {
+    if (!infiniteScrollDetached) {
+      $f7.infiniteScroll.detach('.infinite-scroll-content');
+      infiniteScrollDetached = true;
+    }
+  });
+
+  return $render;
+}
+</script>
+
+<style>
+.wallpapers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 4px;
+  padding: 4px;
+}
+
+.wallpaper-item {
+  position: relative;
+  padding-bottom: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #eee;
+}
+
+.wallpaper-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.wallpaper-item:active img {
+  transform: scale(0.95);
+}
+
+.preloader.infinite-scroll-preloader {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+</style>

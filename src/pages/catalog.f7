@@ -1,0 +1,46 @@
+<template>
+  <div class="page" data-name="catalog">
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner sliding">
+        <div class="title">Catalog</div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="list list-strong list-dividers-ios list-outline-ios inset-md">
+        <ul>
+          ${products.value.map((product) => $h`
+          <li>
+            <a class="item-content item-link" href="/product/${product.id}/">
+              <div class="item-inner">
+                <div class="item-title">${product.title}</div>
+              </div>
+            </a>
+          </li>
+          `)}
+        </ul>
+      </div>
+      ${products.value.length === 3 && $h`
+      <div class="block">
+        <button class="button button-fill" @click=${addProduct}>Add Product</Button>
+      </div>
+      `}
+    </div>
+  </div>
+</template>
+<script>
+  export default (props, { $store }) => {
+    const products = $store.getters.products;
+
+    const addProduct = () => {
+      $store.dispatch('addProduct', {
+        id: '4',
+        title: 'Apple iPhone 12',
+        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi tempora similique reiciendis, error nesciunt vero, blanditiis pariatur dolor, minima sed sapiente rerum, dolorem corrupti hic modi praesentium unde saepe perspiciatis.'
+      });
+    }
+
+    return $render;
+  }
+
+</script>
