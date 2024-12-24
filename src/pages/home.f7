@@ -58,7 +58,21 @@
       <div class="wallpapers-grid">
         ${wallpapers.map((wallpaper) => $h`
           <div class="wallpaper-item elevation-2" @click=${()=> openWallpaper(wallpaper)}>
-            <img src="${wallpaper.thumbnailUrl}" loading="lazy" alt="${wallpaper.title}"/>
+            <div class="progressive-image ${wallpaper.loaded ? 'loaded' : ''}">
+              <img 
+                class="placeholder"
+                src="${wallpaper.placeholderUrl}" 
+                alt="${wallpaper.title}"
+              />
+              <img 
+                class="full-image"
+                src="${wallpaper.thumbnailUrl}" 
+                loading="lazy" 
+                alt="${wallpaper.title}"
+                @load=${() => handleImageLoad(wallpaper)}
+                @error=${(e) => handleImageError(e, wallpaper)}
+              />
+            </div>
             <div class="wallpaper-info">
               <span class="resolution">${wallpaper.resolution}</span>
               <div class="stats">
@@ -156,6 +170,22 @@ export default (props, { $f7, $store, $on, $update }) => {
         wallpaper
       }
     });
+  }
+
+  function handleImageLoad(wallpaper) {
+    wallpaper.loaded = true;
+    $update();
+  }
+
+  function handleImageError(event, wallpaper) {
+    const img = event.target;
+    const currentUrl = img.src;
+    
+    // Try next fallback URL
+    const nextUrl = wallpaper.fallbackUrls.find(url => url !== currentUrl);
+    if (nextUrl) {
+      img.src = nextUrl;
+    }
   }
 
   // Initialize searchbar
@@ -365,5 +395,43 @@ export default (props, { $f7, $store, $on, $update }) => {
     gap: 8px;
     padding: 8px;
   }
+}
+
+.progressive-image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.progressive-image .placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(10px);
+  transform: scale(1.1);
+  transition: opacity 0.3s ease;
+}
+
+.progressive-image .full-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.progressive-image.loaded .placeholder {
+  opacity: 0;
+}
+
+.progressive-image.loaded .full-image {
+  opacity: 1;
 }
 </style>
