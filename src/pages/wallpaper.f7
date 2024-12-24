@@ -1,0 +1,170 @@
+<template>
+  <div class="page" data-name="wallpaper">
+    <!-- Top Navbar -->
+    <div class="navbar">
+      <div class="navbar-bg"></div>
+      <div class="navbar-inner sliding">
+        <div class="left">
+          <a href="#" class="link back">
+            <i class="icon icon-back"></i>
+            <span class="if-not-md">Back</span>
+          </a>
+        </div>
+        <div class="title">${wallpaper.resolution}</div>
+        <div class="right">
+          <a href="#" class="link" @click=${openFullscreen}>
+            <i class="icon f7-icons if-not-md">fullscreen</i>
+            <i class="icon material-icons if-md">fullscreen</i>
+          </a>
+          <a href="${wallpaper.fullUrl}" class="link external" target="_blank">
+            <i class="icon f7-icons if-not-md">square_arrow_down</i>
+            <i class="icon material-icons if-md">download</i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wallpaper Preview -->
+    <div class="page-content">
+      <div class="wallpaper-preview">
+        <img src="${wallpaper.fullUrl}" alt="${wallpaper.title}" @click=${openFullscreen} />
+        
+        <div class="wallpaper-details">
+          <div class="stats-row">
+            <div class="stat-item">
+              <i class="icon f7-icons">eye</i>
+              <span>${wallpaper.views}</span>
+            </div>
+            <div class="stat-item">
+              <i class="icon f7-icons">heart</i>
+              <span>${wallpaper.favorites}</span>
+            </div>
+            <div class="stat-item">
+              <i class="icon f7-icons">resize</i>
+              <span>${wallpaper.resolution}</span>
+            </div>
+          </div>
+          <div class="hint-text">
+            <i class="icon f7-icons">hand_raised_fill</i>
+            Tap image for fullscreen view
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default (props, { $f7 }) => {
+  const wallpaper = props.wallpaper;
+
+  let photoBrowser;
+
+  const openFullscreen = () => {
+    if (!photoBrowser) {
+      photoBrowser = $f7.photoBrowser.create({
+        photos: [
+          {
+            url: wallpaper.fullUrl,
+            caption: `${wallpaper.resolution}`
+          }
+        ],
+        theme: 'dark',
+        type: 'standalone',
+        zoom: {
+          enabled: true,
+          maxRatio: 3,
+          minRatio: 1
+        },
+        swipeToClose: true,
+        navbar: true,
+        toolbar: false,
+        captionsTheme: 'dark',
+        navbarOfText: 'of',
+        pageBackLinkText: 'Back',
+        navbarShowCount: false
+      });
+    }
+    photoBrowser.open();
+  };
+
+  return $render;
+}
+</script>
+
+<style>
+.wallpaper-preview {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.wallpaper-preview img {
+  max-width: 100%;
+  max-height: calc(100vh - var(--f7-navbar-height));
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+.wallpaper-details {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  padding: 20px;
+  color: #fff;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-item i {
+  font-size: 18px;
+}
+
+.stat-item span {
+  font-size: 14px;
+}
+
+.hint-text {
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.hint-text i {
+  font-size: 14px;
+}
+
+/* Override PhotoBrowser styles */
+:root {
+  --f7-photo-browser-bars-bg-color: rgba(0,0,0,0.8);
+}
+
+.photo-browser-page {
+  background: #000;
+}
+
+.photo-browser-caption {
+  background: transparent;
+}
+</style> 

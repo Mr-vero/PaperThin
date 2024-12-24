@@ -1,24 +1,17 @@
 <template>
   <div class="page" data-name="home">
     <!-- Top Navbar -->
-    <div class="navbar navbar-large">
+    <div class="navbar">
       <div class="navbar-bg"></div>
       <div class="navbar-inner">
         <div class="left">
-          <a href="#" class="link icon-only panel-open" data-panel="left">
-            <i class="icon f7-icons if-not-md">menu</i>
-            <i class="icon material-icons if-md">menu</i>
-          </a>
+          <div class="logo">Paper<span>Thin</span></div>
         </div>
-        <div class="title sliding">Wallpaper Hub</div>
         <div class="right">
           <a href="#" class="link icon-only searchbar-enable" data-searchbar=".searchbar-wallpapers">
             <i class="icon f7-icons if-not-md">search</i>
             <i class="icon material-icons if-md">search</i>
           </a>
-        </div>
-        <div class="title-large">
-          <div class="title-large-text">Wallpaper Hub</div>
         </div>
         <form class="searchbar searchbar-wallpapers">
           <div class="searchbar-inner">
@@ -33,12 +26,27 @@
       </div>
     </div>
 
+    <!-- Searchbar overlay -->
+    <div class="searchbar-overlay"></div>
+
+    <!-- Categories -->
+    <div class="categories-scrollbar">
+      <div class="categories">
+        <a href="#" class="category-chip active">All</a>
+        <a href="#" class="category-chip">Nature</a>
+        <a href="#" class="category-chip">Abstract</a>
+        <a href="#" class="category-chip">Minimal</a>
+        <a href="#" class="category-chip">Dark</a>
+        <a href="#" class="category-chip">Anime</a>
+        <a href="#" class="category-chip">Space</a>
+      </div>
+    </div>
+
     <!-- Scrollable page content-->
     <div class="page-content ptr-content infinite-scroll-content" 
          @ptr:refresh=${onRefresh} 
          @infinite=${loadMore}
          data-infinite-distance="50">
-      <div class="searchbar-backdrop"></div>
       
       <!-- Pull to refresh preloader -->
       <div class="ptr-preloader">
@@ -49,8 +57,15 @@
       <!-- Wallpapers Grid -->
       <div class="wallpapers-grid">
         ${wallpapers.map((wallpaper) => $h`
-          <div class="wallpaper-item" @click=${()=> openWallpaper(wallpaper)}>
+          <div class="wallpaper-item elevation-2" @click=${()=> openWallpaper(wallpaper)}>
             <img src="${wallpaper.thumbnailUrl}" loading="lazy" alt="${wallpaper.title}"/>
+            <div class="wallpaper-info">
+              <span class="resolution">${wallpaper.resolution}</span>
+              <div class="stats">
+                <span><i class="icon f7-icons">eye</i> ${wallpaper.views}</span>
+                <span><i class="icon f7-icons">heart</i> ${wallpaper.favorites}</span>
+              </div>
+            </div>
           </div>
         `)}
       </div>
@@ -61,8 +76,8 @@
       `}
 
       ${noMoreItems && $h`
-        <div class="block block-strong text-align-center">
-          <span>No more wallpapers</span>
+        <div class="block block-strong text-align-center no-more">
+          <span>You've reached the end</span>
         </div>
       `}
     </div>
@@ -172,37 +187,183 @@ export default (props, { $f7, $store, $on, $update }) => {
 </script>
 
 <style>
+:root {
+  --f7-navbar-bg-color: #ffffff;
+  --f7-navbar-height: 60px;
+}
+
+.navbar {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.navbar .logo {
+  font-size: 20px;
+  font-weight: 700;
+  padding-left: 16px;
+  color: #333;
+}
+
+.navbar .logo span {
+  color: var(--f7-theme-color);
+}
+
+.categories-scrollbar {
+  background: #fff;
+  position: sticky;
+  top: var(--f7-navbar-height);
+  z-index: 100;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.categories {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.categories::-webkit-scrollbar {
+  display: none;
+}
+
+.category-chip {
+  padding: 6px 16px;
+  border-radius: 100px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.category-chip.active {
+  background: var(--f7-theme-color);
+  color: #fff;
+}
+
 .wallpapers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 4px;
-  padding: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 12px;
 }
 
 .wallpaper-item {
   position: relative;
-  padding-bottom: 100%;
+  border-radius: 12px;
   overflow: hidden;
-  border-radius: 8px;
-  background: #eee;
+  aspect-ratio: 9/16;
+  background: #f5f5f5;
+  transition: transform 0.2s ease;
+}
+
+.wallpaper-item:active {
+  transform: scale(0.98);
 }
 
 .wallpaper-item img {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
 }
 
-.wallpaper-item:active img {
-  transform: scale(0.95);
+.wallpaper-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  color: #fff;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.preloader.infinite-scroll-preloader {
+.wallpaper-item:hover .wallpaper-info {
+  opacity: 1;
+}
+
+.wallpaper-info .resolution {
+  font-weight: 500;
+}
+
+.wallpaper-info .stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.wallpaper-info .stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wallpaper-info .stats i {
+  font-size: 14px;
+}
+
+.no-more {
+  color: #666;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.infinite-scroll-preloader {
   margin-top: 20px;
   margin-bottom: 20px;
+}
+
+.searchbar {
+  display: none; /* Hide by default */
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: #fff;
+  z-index: 200;
+}
+
+.searchbar.searchbar-enabled {
+  display: block;
+}
+
+.searchbar-overlay {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+.searchbar-enabled ~ .searchbar-overlay {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.searchbar-inner {
+  background: #f5f5f5;
+  border-radius: 100px;
+}
+
+@media (max-width: 480px) {
+  .wallpapers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
 }
 </style>
