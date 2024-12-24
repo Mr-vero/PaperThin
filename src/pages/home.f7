@@ -104,8 +104,8 @@ export default (props, { $f7, $store, $on, $update }) => {
   let loading = false;
   let page = 1;
   let noMoreItems = false;
-  let infiniteScrollDetached = false;
   let searchTimeout;
+  let originalWallpapers = []; // Store original wallpapers
 
   // Load initial wallpapers
   loadWallpapers();
@@ -121,10 +121,6 @@ export default (props, { $f7, $store, $on, $update }) => {
         page = 1;
         wallpapers = [];
         noMoreItems = false;
-        if (infiniteScrollDetached) {
-          $f7.infiniteScroll.attach('.infinite-scroll-content');
-          infiniteScrollDetached = false;
-        }
       }
 
       console.log('Fetching wallpapers for page:', page);
@@ -133,12 +129,12 @@ export default (props, { $f7, $store, $on, $update }) => {
       
       if (!newWallpapers || newWallpapers.length === 0) {
         noMoreItems = true;
-        if (!infiniteScrollDetached) {
-          $f7.infiniteScroll.detach('.infinite-scroll-content');
-          infiniteScrollDetached = true;
-        }
       } else {
         wallpapers = [...wallpapers, ...newWallpapers];
+        // Store original wallpapers when loading initial or reset
+        if (reset || page === 1) {
+          originalWallpapers = [...wallpapers];
+        }
         page += 1;
       }
     } catch (error) {
@@ -219,11 +215,18 @@ export default (props, { $f7, $store, $on, $update }) => {
           }
         },
         clear(sb) {
-          // Reset to initial wallpapers when search is cleared
-          wallpapers = [];
-          page = 1;
+          // Restore original wallpapers
+          wallpapers = [...originalWallpapers];
+          page = Math.ceil(wallpapers.length / 24); // Assuming 24 items per page
           noMoreItems = false;
-          loadWallpapers(true);
+          $update();
+        },
+        disable() {
+          // When search bar is closed
+          wallpapers = [...originalWallpapers];
+          page = Math.ceil(wallpapers.length / 24);
+          noMoreItems = false;
+          $update();
         }
       }
     });
