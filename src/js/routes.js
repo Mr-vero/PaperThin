@@ -9,6 +9,7 @@ import CollectionsPage from '../pages/collections.f7';
 import DynamicRoutePage from '../pages/dynamic-route.f7';
 import RequestAndLoad from '../pages/request-and-load.f7';
 import NotFoundPage from '../pages/404.f7';
+import CollectionPage from '../pages/collection.f7';
 
 var routes = [
   {
@@ -94,6 +95,10 @@ var routes = [
         );
       }, 1000);
     },
+  },
+  {
+    path: '/collection/:id/',
+    component: CollectionPage,
   },
   {
     path: '(.*)',

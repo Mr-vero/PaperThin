@@ -79,7 +79,7 @@ export default (props, { $f7, $store, $on, $update }) => {
   }
 
   function openCollection(id) {
-    $f7.views.main.router.navigate(`/collection/${id}/`);
+    $f7.views.current.router.navigate(`/collection/${id}/`);
   }
 
   function handleImageError(event, wallpaper) {

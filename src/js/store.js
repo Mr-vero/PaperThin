@@ -214,6 +214,19 @@ const store = createStore({
         collection.wallpapers.push(...wallpapers);
         localStorage.setItem('collections', JSON.stringify(state.collections));
       }
+    },
+
+    async renameCollection({ state }, { id, name }) {
+      const collection = state.collections.find(c => c.id === id);
+      if (collection) {
+        collection.name = name;
+        localStorage.setItem('collections', JSON.stringify(state.collections));
+      }
+    },
+
+    async deleteCollection({ state }, { id }) {
+      state.collections = state.collections.filter(c => c.id !== id);
+      localStorage.setItem('collections', JSON.stringify(state.collections));
     }
   }
 });
