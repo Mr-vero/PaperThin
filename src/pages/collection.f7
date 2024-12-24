@@ -19,25 +19,34 @@
     </div>
 
     <div class="page-content">
-      ${collection && collection.wallpapers.length > 0 ? $h`
-        <div class="wallpapers-grid">
-          ${collection.wallpapers.map((wallpaper) => $h`
-            <div class="wallpaper-card" @click=${() => openWallpaper(wallpaper)}>
+      <div class="wallpapers-grid" style="padding-top: 80px">
+        ${collection?.wallpapers?.map((wallpaper) => $h`
+          <div class="wallpaper-item" @click=${() => openWallpaper(wallpaper)}>
+            <div class="progressive-image ${wallpaper.loaded ? 'loaded' : ''}">
               <img 
-                src="${wallpaper.thumbnailUrl}" 
+                class="placeholder"
+                src="${wallpaper.placeholderUrl || wallpaper.thumbnailUrl}" 
                 alt="${wallpaper.title || 'Wallpaper'}"
+              />
+              <img 
+                class="full-image"
+                src="${wallpaper.thumbnailUrl}" 
                 loading="lazy"
+                alt="${wallpaper.title || 'Wallpaper'}"
+                @load=${() => handleImageLoad(wallpaper)}
                 @error=${(e) => handleImageError(e, wallpaper)}
               />
             </div>
-          `)}
-        </div>
-      ` : $h`
-        <div class="no-wallpapers">
-          <i class="icon f7-icons">photo</i>
-          <p>No wallpapers in this collection</p>
-        </div>
-      `}
+            <div class="wallpaper-info">
+              <span class="resolution">${wallpaper.resolution}</span>
+              <div class="stats">
+                <span><i class="icon f7-icons">eye</i> ${wallpaper.views || 0}</span>
+                <span><i class="icon f7-icons">heart</i> ${wallpaper.favorites || 0}</span>
+              </div>
+            </div>
+          </div>
+        `)}
+      </div>
     </div>
   </div>
 </template>
@@ -46,7 +55,6 @@
 export default (props, { $f7, $store, $on, $update, $f7route }) => {
   let collection = null;
 
-  // Load collection on mount
   $on('pageInit', () => {
     loadCollection();
   });
@@ -54,6 +62,18 @@ export default (props, { $f7, $store, $on, $update, $f7route }) => {
   async function loadCollection() {
     const collections = await $store.dispatch('fetchCollections');
     collection = collections.find(c => c.id === $f7route.params.id);
+    // Initialize loaded property for each wallpaper
+    if (collection?.wallpapers) {
+      collection.wallpapers = collection.wallpapers.map(w => ({
+        ...w,
+        loaded: false
+      }));
+    }
+    $update();
+  }
+
+  function handleImageLoad(wallpaper) {
+    wallpaper.loaded = true;
     $update();
   }
 
@@ -130,57 +150,106 @@ export default (props, { $f7, $store, $on, $update, $f7route }) => {
 <style>
 .wallpapers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px;
-  padding: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 12px;
+  margin: 0;
+  padding-bottom: calc(var(--f7-toolbar-height) + 68px);
 }
 
-.wallpaper-card {
-  aspect-ratio: 16/9;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f5f5f5;
+.wallpaper-item {
   position: relative;
-}
-
-.wallpaper-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 9/16;
+  background: #f5f5f5;
   transition: transform 0.2s ease;
 }
 
-.wallpaper-card:active img {
+.wallpaper-item:active {
   transform: scale(0.98);
 }
 
-.no-wallpapers {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.progressive-image {
+  position: relative;
+  width: 100%;
   height: 100%;
-  padding: 32px;
-  color: #666;
-  text-align: center;
+  overflow: hidden;
 }
 
-.no-wallpapers .icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  color: #999;
+.progressive-image .placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(10px);
+  transform: scale(1.1);
+  transition: opacity 0.3s ease;
 }
 
-.no-wallpapers p {
-  margin: 0;
-  font-size: 16px;
+.progressive-image .full-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.progressive-image.loaded .placeholder {
+  opacity: 0;
+}
+
+.progressive-image.loaded .full-image {
+  opacity: 1;
+}
+
+.wallpaper-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  color: #fff;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.wallpaper-item:hover .wallpaper-info {
+  opacity: 1;
+}
+
+.wallpaper-info .resolution {
+  font-weight: 500;
+}
+
+.wallpaper-info .stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.wallpaper-info .stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wallpaper-info .stats i {
+  font-size: 14px;
 }
 
 @media (max-width: 480px) {
   .wallpapers-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 6px;
-    padding: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    padding: 8px;
   }
 }
 </style> 

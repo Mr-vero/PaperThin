@@ -189,10 +189,32 @@ const store = createStore({
     },
 
     async fetchCollections({ state }) {
-      // Get collections from localStorage or API
-      const collections = JSON.parse(localStorage.getItem('collections') || '[]');
-      state.collections = collections;
-      return collections;
+      try {
+        // Get collections from localStorage
+        const collectionsData = localStorage.getItem('collections');
+        console.log('Raw collections data:', collectionsData);
+        
+        if (!collectionsData) {
+          state.collections = [];
+          return [];
+        }
+        
+        const collections = JSON.parse(collectionsData);
+        console.log('Parsed collections:', collections);
+        
+        // Ensure each collection has a wallpapers array
+        collections.forEach(collection => {
+          if (!collection.wallpapers) {
+            collection.wallpapers = [];
+          }
+        });
+        
+        state.collections = collections;
+        return collections;
+      } catch (error) {
+        console.error('Error fetching collections:', error);
+        return [];
+      }
     },
 
     async createCollection({ state }, { name }) {
