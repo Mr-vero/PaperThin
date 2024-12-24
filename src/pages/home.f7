@@ -1,7 +1,7 @@
 <template>
   <div class="page" data-name="home">
     <!-- Top Navbar -->
-    <div class="navbar navbar-large navbar-transparent">
+    <div class="navbar navbar-large navbar-transparent no-outline">
       <div class="navbar-bg"></div>
       <div class="navbar-inner">
         <div class="left">
@@ -28,20 +28,6 @@
 
     <!-- Searchbar overlay -->
     <div class="searchbar-overlay"></div>
-
-    <!-- Categories -->
-    <div class="categories-scrollbar">
-      <div class="categories">
-        ${categories.map((category) => $h`
-          <a href="#" 
-             class="category-chip ${currentCategory === category.id ? 'active' : ''}"
-             data-category="${category.id}"
-             @click=${() => handleCategoryClick(category.id)}>
-            ${category.name}
-          </a>
-        `)}
-      </div>
-    </div>
 
     <!-- Scrollable page content-->
     <div class="page-content ptr-content infinite-scroll-content" 
@@ -95,6 +81,20 @@
           <span>You've reached the end</span>
         </div>
       `}
+    </div>
+
+    <!-- Categories -->
+    <div class="categories-scrollbar">
+      <div class="categories">
+        ${categories.map((category) => $h`
+          <a href="#" 
+             class="category-chip ${currentCategory === category.id ? 'active' : ''}"
+             data-category="${category.id}"
+             @click=${() => handleCategoryClick(category.id)}>
+            ${category.name}
+          </a>
+        `)}
+      </div>
     </div>
   </div>
 </template>
@@ -357,13 +357,16 @@ export default (props, { $f7, $store, $on, $update }) => {
 }
 
 .categories-scrollbar {
-  position: sticky;
-  top: var(--f7-navbar-height);
-  z-index: 100;
-  background: #fff;
+  position: fixed;
+  bottom: calc(var(--f7-toolbar-height) + 8px);
+  left: 0;
+  right: 0;
+  z-index: 5000;
+  background: transparent;
   transition: transform 0.3s ease;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-top: none;
   margin: 0;
+  box-shadow: none;
 }
 
 .categories {
@@ -376,6 +379,7 @@ export default (props, { $f7, $store, $on, $update }) => {
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-behavior: smooth;
+  background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
 }
 
 .categories::-webkit-scrollbar {
@@ -385,7 +389,9 @@ export default (props, { $f7, $store, $on, $update }) => {
 .category-chip {
   padding: 8px 16px;
   border-radius: 100px;
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #666;
   font-size: 14px;
   white-space: nowrap;
@@ -406,6 +412,19 @@ export default (props, { $f7, $store, $on, $update }) => {
   font-weight: 500;
 }
 
+/* Special styling for NSFW categories */
+.category-chip[data-category="sketchy"],
+.category-chip[data-category="nsfw"] {
+  background: rgba(255, 75, 62, 0.08);
+  color: #ff4b3e;
+}
+
+.category-chip[data-category="sketchy"].active,
+.category-chip[data-category="nsfw"].active {
+  background: #ff4b3e;
+  color: white;
+}
+
 .wallpapers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -413,6 +432,7 @@ export default (props, { $f7, $store, $on, $update }) => {
   padding: 12px;
   margin: 0;
   padding-top: 70px;
+  padding-bottom: calc(var(--f7-toolbar-height) + 68px);
 }
 
 .wallpaper-item {
@@ -581,12 +601,11 @@ export default (props, { $f7, $store, $on, $update }) => {
   position: sticky;
   top: var(--f7-navbar-height);
   z-index: 100;
-  background: #fff;
   transition: transform 0.3s ease;
 }
 
 .categories-scrollbar.categories-hidden {
-  transform: translateY(-100%);
+  transform: translateY(calc(100% + var(--f7-toolbar-height) + 8px));
 }
 
 .category-chip {
