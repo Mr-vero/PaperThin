@@ -382,51 +382,97 @@ export default (props, { $f7, $store, $on, $update }) => {
   async function addToCollection() {
     const collections = await $store.dispatch('fetchCollections');
     
-    if (collections.length === 0) {
-      $f7.dialog.prompt('Collection Name', 'New Collection', async (name) => {
-        if (name.trim()) {
-          const collection = await $store.dispatch('createCollection', { name });
-          await $store.dispatch('addToCollection', {
-            collectionId: collection.id,
-            wallpapers: selectedWallpapers
-          });
-          // Show main toolbar
-          document.querySelector('.toolbar.tabbar-icons').classList.remove('toolbar-hidden');
-          cancelSelection();
-        }
-      });
-      return;
-    }
-
-    const actions = collections.map(c => ({
-      text: c.name,
-      onClick: async () => {
-        await $store.dispatch('addToCollection', {
-          collectionId: c.id,
-          wallpapers: selectedWallpapers
-        });
-        cancelSelection();
-      }
-    }));
-
-    actions.push({
-      text: 'New Collection',
-      onClick: () => {
-        $f7.dialog.prompt('Collection Name', 'New Collection', async (name) => {
-          if (name.trim()) {
-            const collection = await $store.dispatch('createCollection', { name });
+    const buttons = [];
+    
+    // Add existing collections
+    if (collections.length > 0) {
+      buttons.push(...collections.map(c => ({
+        text: c.name,
+        onClick: async () => {
+          $f7.preloader.show();
+          try {
             await $store.dispatch('addToCollection', {
-              collectionId: collection.id,
+              collectionId: c.id,
               wallpapers: selectedWallpapers
             });
+            $f7.toast.show({
+              text: 'Added to collection',
+              position: 'bottom',
+              closeTimeout: 2000
+            });
             cancelSelection();
+          } catch (error) {
+            $f7.toast.show({
+              text: 'Failed to add to collection',
+              position: 'bottom',
+              closeTimeout: 2000
+            });
           }
-        });
+          $f7.preloader.hide();
+        }
+      })));
+      
+      // Add separator
+      buttons.push({ text: '', label: true });
+    }
+    
+    // Add "New Collection" button
+    buttons.push({
+      text: '<span class="color-primary">New Collection</span>',
+      bold: true,
+      onClick: () => {
+        $f7.dialog.create({
+          title: 'New Collection',
+          text: 'Enter collection name',
+          content: `
+            <div class="dialog-input-field">
+              <input type="text" class="dialog-input" placeholder="Collection name">
+            </div>
+          `,
+          buttons: [
+            {
+              text: 'Cancel'
+            },
+            {
+              text: 'Create',
+              bold: true,
+              onClick: async (dialog) => {
+                const name = dialog.$el.find('.dialog-input').val();
+                if (!name.trim()) return;
+                
+                $f7.preloader.show();
+                try {
+                  const collection = await $store.dispatch('createCollection', { name });
+                  await $store.dispatch('addToCollection', {
+                    collectionId: collection.id,
+                    wallpapers: selectedWallpapers
+                  });
+                  $f7.toast.show({
+                    text: 'Created collection and added wallpapers',
+                    position: 'bottom',
+                    closeTimeout: 2000
+                  });
+                  cancelSelection();
+                } catch (error) {
+                  $f7.toast.show({
+                    text: 'Failed to create collection',
+                    position: 'bottom',
+                    closeTimeout: 2000
+                  });
+                }
+                $f7.preloader.hide();
+              }
+            }
+          ]
+        }).open();
       }
     });
 
+    // Show actions sheet
     $f7.actions.create({
-      buttons: actions
+      buttons: [buttons],
+      closeOnSelect: true,
+      animate: true
     }).open();
   }
 
