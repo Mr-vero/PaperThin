@@ -1,5 +1,5 @@
 <template>
-  <div class="page" data-name="wallpaper">
+  <div class="page no-toolbar" data-name="wallpaper">
     <!-- Floating Navbar -->
     <div class="navbar no-shadow floating-navbar">
       <div class="navbar-bg"></div>
@@ -249,7 +249,7 @@ export default (props, { $f7 }) => {
 
 .stat-item i {
   font-size: 24px;
-  color: #4f46e5;
+  color: #ff4b3e;
   margin-bottom: 8px;
 }
 
@@ -266,7 +266,7 @@ export default (props, { $f7 }) => {
 }
 
 .action-button {
-  background: #4f46e5;
+  background: #ff4b3e;
   color: #fff;
   padding: 16px;
   border-radius: 12px;
@@ -281,7 +281,7 @@ export default (props, { $f7 }) => {
 
 .action-button:active {
   transform: scale(0.98);
-  background: #4338ca;
+  background: #ff4b3e;
 }
 
 .action-button i {
