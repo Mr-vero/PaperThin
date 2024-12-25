@@ -42,7 +42,7 @@
       </div>
       
       <!-- Wallpapers Grid -->
-      <div class="wallpapers-grid">
+      <div class="wallpapers-grid" style="margin-top: 70px;">
         ${wallpapers.map((wallpaper) => $h`
           <div class="wallpaper-item elevation-2" 
                @click=${selectionMode ? () => toggleSelection(wallpaper) : () => openWallpaper(wallpaper)}
@@ -501,6 +501,32 @@ export default (props, { $f7, $store, $on, $update }) => {
     clearTimeout(longPressTimer);
   }
 
+  function initializeAnimations() {
+    const wallpaperItems = document.querySelectorAll('.wallpaper-item');
+    
+    // Initialize intersection observer for fade-in effects
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    wallpaperItems.forEach(item => {
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(20px)';
+      item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(item);
+    });
+  }
+
+  $on('pageInit', () => {
+    initializeAnimations();
+    // ... existing pageInit code ...
+  });
+
   return $render;
 }
 </script>
@@ -512,45 +538,43 @@ export default (props, { $f7, $store, $on, $update }) => {
 }
 
 .navbar {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
 .navbar .logo {
-  font-size: 20px;
-  font-weight: 700;
-  padding-left: 16px;
-  color: #333;
-}
-
-.navbar .logo span {
-  color: var(--f7-theme-color);
+  font-size: 22px;
+  background: linear-gradient(135deg, var(--f7-theme-color), #ff6b6b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
 }
 
 .categories-scrollbar {
   position: fixed;
-  bottom: calc(var(--f7-toolbar-height) + 8px);
+  bottom: calc(var(--f7-toolbar-height) + 6px);
   left: 0;
   right: 0;
   z-index: 5000;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 16px 0 12px;
   transition: transform 0.3s ease;
-  border-top: none;
-  margin: 0;
-  box-shadow: none;
 }
 
 .categories {
-  padding: 8px 16px;
+  padding: 0 16px;
   margin: 0;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-behavior: smooth;
-  background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
 }
 
 .categories::-webkit-scrollbar {
@@ -558,19 +582,16 @@ export default (props, { $f7, $store, $on, $update }) => {
 }
 
 .category-chip {
-  padding: 8px 16px;
-  border-radius: 100px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #666;
-  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: rgba(var(--f7-theme-color-rgb), 0.05);
+  color: var(--f7-theme-color);
+  font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
-  transition: all 0.3s ease;
-  margin: 0 4px;
-  text-decoration: none;
-  user-select: none;
-  -webkit-user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border: 1px solid rgba(var(--f7-theme-color-rgb), 0.1);
 }
 
 .category-chip:active {
@@ -580,13 +601,14 @@ export default (props, { $f7, $store, $on, $update }) => {
 .category-chip.active {
   background: var(--f7-theme-color);
   color: #fff;
-  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(var(--f7-theme-color-rgb), 0.3);
 }
 
 /* Special styling for NSFW categories */
 .category-chip[data-category="sketchy"],
 .category-chip[data-category="nsfw"] {
-  background: rgba(255, 75, 62, 0.08);
+  background: rgba(255, 75, 62, 0.05);
+  border-color: rgba(255, 75, 62, 0.1);
   color: #ff4b3e;
 }
 
@@ -594,13 +616,14 @@ export default (props, { $f7, $store, $on, $update }) => {
 .category-chip[data-category="nsfw"].active {
   background: #ff4b3e;
   color: white;
+  box-shadow: 0 4px 12px rgba(255, 75, 62, 0.3);
 }
 
 .wallpapers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-  padding: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 16px;
   margin: 0;
   padding-top: 70px;
   padding-bottom: calc(var(--f7-toolbar-height) + 68px);
@@ -608,15 +631,23 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 .wallpaper-item {
   position: relative;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   aspect-ratio: 9/16;
   background: #f5f5f5;
   transition: transform 0.2s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform-origin: center;
+  will-change: transform;
 }
 
 .wallpaper-item:active {
   transform: scale(0.98);
+}
+
+.wallpaper-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
 }
 
 .wallpaper-item img {
@@ -630,11 +661,15 @@ export default (props, { $f7, $store, $on, $update }) => {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 12px;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  padding: 20px 16px 16px;
+  background: linear-gradient(to top, 
+    rgba(0, 0, 0, 0.8) 0%, 
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent 100%
+  );
   color: #fff;
   font-size: 12px;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.2s ease;
 }
 
@@ -650,12 +685,24 @@ export default (props, { $f7, $store, $on, $update }) => {
   display: flex;
   gap: 12px;
   margin-top: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .wallpaper-info .stats span {
   display: flex;
   align-items: center;
   gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.wallpaper-info .stats span:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .wallpaper-info .stats i {
@@ -669,8 +716,25 @@ export default (props, { $f7, $store, $on, $update }) => {
 }
 
 .infinite-scroll-preloader {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  position: relative;
+  padding: 20px;
+}
+
+.infinite-scroll-preloader:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center,
+    rgba(var(--f7-theme-color-rgb), 0.1),
+    transparent 70%
+  );
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 .searchbar {
@@ -715,10 +779,19 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 @media (max-width: 480px) {
   .wallpapers-grid {
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 8px;
-    padding: 8px;
-    padding-top: 70px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .wallpaper-info {
+    font-size: 11px;
+    padding: 15px 12px 12px;
+  }
+  
+  .category-chip {
+    padding: 8px 14px;
+    font-size: 13px;
   }
 }
 
@@ -825,6 +898,9 @@ export default (props, { $f7, $store, $on, $update }) => {
   align-items: center;
   justify-content: center;
   z-index: 1;
+  transform: scale(0.8);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .selection-checkbox i {
@@ -865,5 +941,26 @@ export default (props, { $f7, $store, $on, $update }) => {
   background: rgba(255, 255, 255, 0.9);
   border-top: none;
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Dark Mode Support */
+:root.theme-dark {
+  --f7-navbar-bg-color: rgba(30, 30, 30, 0.9);
+  
+  .wallpaper-item {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .category-chip {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .categories-scrollbar {
+    background: linear-gradient(to bottom,
+      rgba(30, 30, 30, 0.95),
+      rgba(30, 30, 30, 0.8)
+    );
+  }
 }
 </style>
