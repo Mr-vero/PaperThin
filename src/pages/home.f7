@@ -239,25 +239,30 @@ export default (props, { $f7, $store, $on, $update }) => {
     $update();
   }
 
-  async function loadMore(done) {
+  async function loadMore() {
+    if (loading || noMoreItems) return;
+    
+    loading = true;
+    $update();
+
     try {
-      currentPage++;
       const newWallpapers = await $store.dispatch('fetchWallpapers', {
-        page: currentPage,
-        category: currentCategory
+        page,
+        category: currentCategory === 'all' ? null : currentCategory
       });
       
-      if (newWallpapers.length > 0) {
-        wallpapers.push(...newWallpapers);
-        $update();
+      if (!newWallpapers || newWallpapers.length === 0) {
+        noMoreItems = true;
+      } else {
+        wallpapers = [...wallpapers, ...newWallpapers];
+        page += 1;
       }
     } catch (error) {
       console.error('Error loading more wallpapers:', error);
     }
-    
-    if (typeof done === 'function') {
-      done();
-    }
+
+    loading = false;
+    $update();
   }
 
   function onRefresh(e, done) {
