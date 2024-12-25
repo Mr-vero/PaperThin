@@ -30,7 +30,7 @@
     <div class="searchbar-overlay"></div>
 
     <!-- Scrollable page content-->
-    <div class="page-content ptr-content infinite-scroll-content ${selectionMode ? 'selection-mode' : ''}" 
+    <div class="page-content hide-toolbar-on-scroll ptr-content infinite-scroll-content ${selectionMode ? 'selection-mode' : ''}" 
          @ptr:refresh=${onRefresh} 
          @infinite=${loadMore}
          data-infinite-distance="50">
