@@ -16,7 +16,7 @@
             <i class="icon f7-icons if-not-md">fullscreen</i>
             <i class="icon material-icons if-md">fullscreen</i>
           </a>
-          <a href="${wallpaper.fullUrl}" class="link external" target="_blank">
+          <a href="#" class="link" @click=${handleDownload}>
             <i class="icon f7-icons if-not-md">square_arrow_down</i>
             <i class="icon material-icons if-md">download</i>
           </a>
@@ -59,6 +59,87 @@ export default (props, { $f7 }) => {
   const wallpaper = props.wallpaper;
 
   let photoBrowser;
+
+  const handleDownload = () => {
+    try {
+      // Show loading indicator
+      $f7.preloader.show();
+
+      // Create a new image to load the full resolution version
+      const img = new Image();
+      img.crossOrigin = 'anonymous';  // Try to handle CORS
+      
+      img.onload = () => {
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Draw image to canvas
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        // Convert to data URL and trigger download
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
+          const link = document.createElement('a');
+          link.download = `paperthin_${wallpaper.resolution}.jpg`;
+          link.href = dataUrl;
+          link.className = 'external';  // Add external class
+          link.style.display = 'none';
+          
+          document.body.appendChild(link);
+          link.click();
+          
+          setTimeout(() => {
+            document.body.removeChild(link);
+            $f7.preloader.hide();
+          }, 200);
+          
+          $f7.toast.create({
+            text: 'Download started',
+            position: 'bottom',
+            closeTimeout: 2000,
+          }).open();
+        } catch (e) {
+          console.error('Canvas export failed:', e);
+          $f7.toast.create({
+            text: 'Download failed',
+            position: 'bottom',
+            closeTimeout: 2000,
+          }).open();
+          $f7.preloader.hide();
+        }
+      };
+      
+      img.onerror = () => {
+        console.error('Image loading failed');
+        $f7.toast.create({
+          text: 'Download failed',
+          position: 'bottom',
+          closeTimeout: 2000,
+        }).open();
+        $f7.preloader.hide();
+      };
+      
+      // Start loading the image
+      img.src = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(wallpaper.fullUrl)}`;
+      
+    } catch (error) {
+      console.error('Download failed:', error);
+      $f7.toast.create({
+        text: 'Download failed',
+        position: 'bottom',
+        closeTimeout: 2000,
+      }).open();
+      $f7.preloader.hide();
+    }
+  };
+
+  const getFileExtension = (url) => {
+    const extension = url.split('.').pop().toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension) ? extension : 'jpg';
+  };
 
   const openFullscreen = () => {
     if (!photoBrowser) {
