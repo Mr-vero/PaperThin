@@ -1,5 +1,5 @@
 <template>
-  <div class="page" data-name="collection">
+  <div class="page no-toolbar" data-name="collection">
     <div class="navbar">
       <div class="navbar-bg"></div>
       <div class="navbar-inner sliding">
@@ -78,9 +78,16 @@ export default (props, { $f7, $store, $on, $update, $f7route }) => {
   }
 
   function openWallpaper(wallpaper) {
-    $f7.views.main.router.navigate('/wallpaper/', {
+    $f7.views.current.router.navigate('/wallpaper/', {
       props: {
-        wallpaper
+        wallpaper: {
+          id: wallpaper.id,
+          title: wallpaper.title,
+          fullUrl: wallpaper.fullUrl || wallpaper.thumbnailUrl,
+          resolution: wallpaper.resolution,
+          views: wallpaper.views || 0,
+          favorites: wallpaper.favorites || 0
+        }
       }
     });
   }
@@ -247,7 +254,7 @@ export default (props, { $f7, $store, $on, $update, $f7route }) => {
 
 @media (max-width: 480px) {
   .wallpapers-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 8px;
     padding: 8px;
   }

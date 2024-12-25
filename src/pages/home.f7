@@ -56,13 +56,8 @@
             `}
             <div class="progressive-image ${wallpaper.loaded ? 'loaded' : ''}">
               <img 
-                class="placeholder"
-                src="${wallpaper.placeholderUrl}" 
-                alt="${wallpaper.title}"
-              />
-              <img 
                 class="full-image"
-                src="${wallpaper.thumbnailUrl}" 
+                src="${wallpaper.path}" 
                 loading="lazy" 
                 alt="${wallpaper.title}"
                 @load=${() => handleImageLoad(wallpaper)}
@@ -720,7 +715,7 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 @media (max-width: 480px) {
   .wallpapers-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 8px;
     padding: 8px;
     padding-top: 70px;
