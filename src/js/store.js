@@ -49,51 +49,29 @@ const store = createStore({
 
     async searchWallpapers({ state }, query) {
       try {
-        // First, update state to show loading
         state.loading = true;
         
-        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(
-          `https://wallhaven.cc/api/v1/search?q=${encodeURIComponent(query)}&page=1`
-        )}`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
+        // Search across all providers in parallel
+        const searchPromises = [
+          searchWallhavenImages(query),
+          searchUnsplashImages(query),
+          searchAlphacodersImages(query)
+          // Note: Bing doesn't support search, so we skip it
+        ];
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const results = await Promise.allSettled(searchPromises);
         
-        const data = await response.json();
-        console.log('Search response:', data);
+        // Combine results from all providers
+        const combinedResults = results
+          .filter(result => result.status === 'fulfilled')
+          .map(result => result.value)
+          .flat()
+          .filter(Boolean);
 
-        if (!data || !data.data) {
-          throw new Error('Invalid response format');
-        }
-
-        // Return the transformed data with simplified structure
-        return data.data.map(wallpaper => ({
-          id: wallpaper.id,
-          title: `Wallpaper ${wallpaper.id}`,
-          path: wallpaper.thumbs.large,     // Use large thumbnail directly
-          fullUrl: wallpaper.path,          // Keep full URL for the wallpaper page
-          resolution: wallpaper.resolution,
-          category: wallpaper.category,
-          views: wallpaper.views,
-          favorites: wallpaper.favorites,
-          loaded: false
-        }));
+        return shuffleArray(combinedResults);
         
       } catch (error) {
-        console.error('Error searching wallpapers:', error);
-        if (typeof window !== 'undefined' && window.f7) {
-          window.f7.toast.show({
-            text: 'Error searching wallpapers. Please try again.',
-            closeTimeout: 2000,
-            position: 'bottom'
-          });
-        }
+        console.error('Search error:', error);
         return [];
       } finally {
         state.loading = false;
@@ -389,6 +367,102 @@ async function fetchAlphacodersImages(page, category) {
     });
   } catch (error) {
     console.error('Alphacoders fetch error:', error);
+    return [];
+  }
+}
+
+// Provider-specific search functions
+async function searchWallhavenImages(query) {
+  try {
+    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(
+      `https://wallhaven.cc/api/v1/search?q=${encodeURIComponent(query)}&page=1`
+    )}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Wallhaven search failed');
+    
+    const data = await response.json();
+    
+    return data.data.map(wallpaper => ({
+      id: wallpaper.id,
+      title: `Wallpaper ${wallpaper.id}`,
+      path: wallpaper.thumbs.large,
+      fullUrl: wallpaper.path,
+      resolution: wallpaper.resolution,
+      views: wallpaper.views,
+      favorites: wallpaper.favorites,
+      loaded: false
+    }));
+  } catch (error) {
+    console.error('Wallhaven search error:', error);
+    return [];
+  }
+}
+
+async function searchUnsplashImages(query) {
+  try {
+    const url = `${CORS_PROXY}${encodeURIComponent(
+      `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(query)}&per_page=24&page=1`
+    )}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Unsplash search failed');
+    
+    const data = await response.json();
+    
+    return data.results.map(photo => ({
+      id: photo.id,
+      title: photo.description || 'Unsplash Wallpaper',
+      path: photo.urls.small,
+      fullUrl: photo.urls.full,
+      resolution: `${photo.width}x${photo.height}`,
+      views: photo.views || 0,
+      favorites: photo.likes || 0,
+      loaded: false,
+      fallbackUrls: [photo.urls.regular, photo.urls.small]
+    }));
+  } catch (error) {
+    console.error('Unsplash search error:', error);
+    return [];
+  }
+}
+
+async function searchAlphacodersImages(query) {
+  try {
+    const url = `${CORS_PROXY}${encodeURIComponent(
+      `https://wall.alphacoders.com/search.php?search=${encodeURIComponent(query)}`
+    )}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Alphacoders search failed');
+    
+    const html = await response.text();
+    
+    const imageRegex = /class="thumb-container-big"[\s\S]*?<img.*?src="(.*?)".*?title="(.*?)"/g;
+    const matches = [...html.matchAll(imageRegex)];
+    
+    return matches.map((match, index) => {
+      const [_, thumbnailUrl, title] = match;
+      const fullUrl = thumbnailUrl.replace('thumbbig-', '');
+      
+      return {
+        id: `alphacoders-search-${index}`,
+        title: title || 'Wallpaper',
+        path: thumbnailUrl,
+        fullUrl,
+        resolution: 'HD',
+        views: Math.floor(Math.random() * 1000),
+        favorites: Math.floor(Math.random() * 100),
+        loaded: false,
+        fallbackUrls: [thumbnailUrl]
+      };
+    });
+  } catch (error) {
+    console.error('Alphacoders search error:', error);
     return [];
   }
 }
