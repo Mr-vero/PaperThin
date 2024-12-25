@@ -1,52 +1,58 @@
 <template>
   <div class="page" data-name="wallpaper">
-    <!-- Top Navbar -->
-    <div class="navbar">
+    <!-- Floating Navbar -->
+    <div class="navbar no-shadow floating-navbar">
       <div class="navbar-bg"></div>
-      <div class="navbar-inner sliding">
+      <div class="navbar-inner">
         <div class="left">
           <a href="#" class="link back">
-            <i class="icon icon-back"></i>
-            <span class="if-not-md">Back</span>
+            <i class="icon f7-icons">chevron_left</i>
           </a>
         </div>
-        <div class="title">${wallpaper.resolution}</div>
         <div class="right">
           <a href="#" class="link" @click=${openFullscreen}>
-            <i class="icon f7-icons if-not-md">fullscreen</i>
-            <i class="icon material-icons if-md">fullscreen</i>
+            <i class="icon f7-icons">crop_rotate</i>
           </a>
-          <a href="#" class="link" @click=${handleDownload}>
-            <i class="icon f7-icons if-not-md">square_arrow_down</i>
-            <i class="icon material-icons if-md">download</i>
+          <a href="#" class="link download-button" @click=${handleDownload}>
+            <i class="icon f7-icons">arrow_down_circle_fill</i>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Wallpaper Preview -->
+    <!-- Wallpaper Content -->
     <div class="page-content">
-      <div class="wallpaper-preview">
-        <img src="${wallpaper.fullUrl}" alt="${wallpaper.title}" @click=${openFullscreen} />
+      <div class="wallpaper-container">
+        <!-- Main Image -->
+        <div class="wallpaper-preview">
+          <img src="${wallpaper.fullUrl}" alt="${wallpaper.title}" @click=${openFullscreen} />
+        </div>
         
-        <div class="wallpaper-details">
-          <div class="stats-row">
+        <!-- Info Card -->
+        <div class="info-card">
+          <div class="resolution-tag">${wallpaper.resolution}</div>
+          
+          <div class="stats-grid">
             <div class="stat-item">
-              <i class="icon f7-icons">eye</i>
-              <span>${wallpaper.views}</span>
+              <i class="icon f7-icons">eye_fill</i>
+              <span class="value">${formatNumber(wallpaper.views)}</span>
+              <span class="label">Views</span>
             </div>
             <div class="stat-item">
-              <i class="icon f7-icons">heart</i>
-              <span>${wallpaper.favorites}</span>
+              <i class="icon f7-icons">heart_fill</i>
+              <span class="value">${formatNumber(wallpaper.favorites)}</span>
+              <span class="label">Favorites</span>
             </div>
             <div class="stat-item">
-              <i class="icon f7-icons">resize</i>
-              <span>${wallpaper.resolution}</span>
+              <i class="icon f7-icons">photo_fill</i>
+              <span class="value">${getFileSize()}</span>
+              <span class="label">Size</span>
             </div>
           </div>
-          <div class="hint-text">
-            <i class="icon f7-icons">hand_raised_fill</i>
-            Tap image for fullscreen view
+
+          <div class="action-button" @click=${handleDownload}>
+            <i class="icon f7-icons">arrow_down_circle_fill</i>
+            <span>Download Wallpaper</span>
           </div>
         </div>
       </div>
@@ -57,113 +63,98 @@
 <script>
 export default (props, { $f7 }) => {
   const wallpaper = props.wallpaper;
-
   let photoBrowser;
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num/1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num/1000).toFixed(1)}K`;
+    return num;
+  };
+
+  const getFileSize = () => {
+    // Estimate file size based on resolution
+    const [width, height] = wallpaper.resolution.split('x');
+    const pixels = width * height;
+    const sizeInMB = (pixels * 3 / (1024 * 1024)).toFixed(1);
+    return `${sizeInMB}MB`;
+  };
 
   const handleDownload = () => {
     try {
-      // Show loading indicator
-      $f7.preloader.show();
+      // Show progress indicator
+      $f7.dialog.preloader('Preparing Download...');
 
-      // Create a new image to load the full resolution version
       const img = new Image();
-      img.crossOrigin = 'anonymous';  // Try to handle CORS
+      img.crossOrigin = 'anonymous';
       
       img.onload = () => {
-        // Create canvas
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
         
-        // Draw image to canvas
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         
-        // Convert to data URL and trigger download
         try {
           const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
           const link = document.createElement('a');
-          link.download = `paperthin_${wallpaper.resolution}.jpg`;
+          
+          const resolution = wallpaper.resolution.replace(' ', '');
+          const filename = `paperthin_${resolution}.jpg`;
+          
+          link.download = filename;
           link.href = dataUrl;
-          link.className = 'external';  // Add external class
-          link.style.display = 'none';
+          link.className = 'external';
           
           document.body.appendChild(link);
           link.click();
+          document.body.removeChild(link);
           
-          setTimeout(() => {
-            document.body.removeChild(link);
-            $f7.preloader.hide();
-          }, 200);
+          $f7.dialog.close();
           
-          $f7.toast.create({
-            text: 'Download started',
-            position: 'bottom',
-            closeTimeout: 2000,
+          // Show success notification
+          $f7.notification.create({
+            icon: '<i class="icon f7-icons">checkmark_circle_fill</i>',
+            title: 'Download Complete',
+            subtitle: filename,
+            closeTimeout: 3000,
           }).open();
+          
         } catch (e) {
-          console.error('Canvas export failed:', e);
-          $f7.toast.create({
-            text: 'Download failed',
-            position: 'bottom',
-            closeTimeout: 2000,
-          }).open();
-          $f7.preloader.hide();
+          console.error('Export failed:', e);
+          showError();
         }
       };
       
-      img.onerror = () => {
-        console.error('Image loading failed');
-        $f7.toast.create({
-          text: 'Download failed',
-          position: 'bottom',
-          closeTimeout: 2000,
-        }).open();
-        $f7.preloader.hide();
-      };
-      
-      // Start loading the image
+      img.onerror = showError;
       img.src = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(wallpaper.fullUrl)}`;
       
     } catch (error) {
       console.error('Download failed:', error);
-      $f7.toast.create({
-        text: 'Download failed',
-        position: 'bottom',
-        closeTimeout: 2000,
-      }).open();
-      $f7.preloader.hide();
+      showError();
     }
   };
 
-  const getFileExtension = (url) => {
-    const extension = url.split('.').pop().toLowerCase();
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension) ? extension : 'jpg';
+  const showError = () => {
+    $f7.dialog.close();
+    $f7.notification.create({
+      icon: '<i class="icon f7-icons">xmark_circle_fill</i>',
+      title: 'Download Failed',
+      subtitle: 'Please try again',
+      closeTimeout: 3000,
+    }).open();
   };
 
   const openFullscreen = () => {
     if (!photoBrowser) {
       photoBrowser = $f7.photoBrowser.create({
-        photos: [
-          {
-            url: wallpaper.fullUrl,
-            caption: `${wallpaper.resolution}`
-          }
-        ],
+        photos: [{ url: wallpaper.fullUrl }],
         theme: 'dark',
         type: 'standalone',
-        zoom: {
-          enabled: true,
-          maxRatio: 3,
-          minRatio: 1
-        },
+        zoom: { enabled: true, maxRatio: 3, minRatio: 1 },
         swipeToClose: true,
         navbar: true,
         toolbar: false,
-        captionsTheme: 'dark',
-        navbarOfText: 'of',
-        pageBackLinkText: 'Back',
-        navbarShowCount: false
       });
     }
     photoBrowser.open();
@@ -174,78 +165,137 @@ export default (props, { $f7 }) => {
 </script>
 
 <style>
-.wallpaper-preview {
-  position: relative;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #000;
+/* Main Layout */
+.page {
+  background: #f8f9fa;
 }
 
-.wallpaper-preview img {
-  max-width: 100%;
-  max-height: calc(100vh - var(--f7-navbar-height));
-  object-fit: contain;
-  cursor: zoom-in;
-}
-
-.wallpaper-details {
+.floating-navbar {
+  background: transparent !important;
+  --f7-navbar-bg-color: transparent;
+  --f7-navbar-text-color: #fff;
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  padding: 20px;
+}
+
+.floating-navbar .navbar-bg {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.floating-navbar .link i {
+  font-size: 24px;
   color: #fff;
 }
 
-.stats-row {
+.wallpaper-container {
+  min-height: 100%;
   display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-bottom: 12px;
+  flex-direction: column;
+}
+
+/* Wallpaper Preview */
+.wallpaper-preview {
+  position: relative;
+  height: 70vh;
+  background: #000;
+  overflow: hidden;
+}
+
+.wallpaper-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Info Card */
+.info-card {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 24px;
+  margin-top: -24px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.resolution-tag {
+  display: inline-block;
+  background: #f0f2f5;
+  color: #1f2937;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .stat-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  text-align: center;
 }
 
 .stat-item i {
+  font-size: 24px;
+  color: #4f46e5;
+  margin-bottom: 8px;
+}
+
+.stat-item .value {
   font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
 }
 
-.stat-item span {
-  font-size: 14px;
-}
-
-.hint-text {
-  text-align: center;
+.stat-item .label {
   font-size: 12px;
-  opacity: 0.7;
+  color: #6b7280;
+}
+
+.action-button {
+  background: #4f46e5;
+  color: #fff;
+  padding: 16px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
 }
 
-.hint-text i {
-  font-size: 14px;
+.action-button:active {
+  transform: scale(0.98);
+  background: #4338ca;
 }
 
-/* Override PhotoBrowser styles */
+.action-button i {
+  font-size: 20px;
+}
+
+/* PhotoBrowser Overrides */
 :root {
-  --f7-photo-browser-bars-bg-color: rgba(0,0,0,0.8);
+  --f7-photobrowser-bg-color: #000;
 }
 
-.photo-browser-page {
-  background: #000;
-}
-
-.photo-browser-caption {
-  background: transparent;
+.photo-browser-page .navbar {
+  background: rgba(0,0,0,0.8) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 </style> 
