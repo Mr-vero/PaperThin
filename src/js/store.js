@@ -566,16 +566,43 @@ async function searchAlphacodersImages(query) {
 
 async function fetchRandomWallhavenImage() {
   try {
-    // Get a random page between 1 and 10
-    const randomPage = Math.floor(Math.random() * 10) + 1;
+    // Define different collection types for variety
+    const collections = [
+      {
+        sorting: 'toplist',
+        topRange: '1M',
+        order: 'desc'
+      },
+      {
+        sorting: 'toplist',
+        topRange: '3M',
+        order: 'desc'
+      },
+      {
+        sorting: 'hot',    // Currently trending
+        order: 'desc'
+      },
+      {
+        sorting: 'views',  // Most viewed
+        order: 'desc'
+      },
+      {
+        sorting: 'favorites',  // Most favorited
+        order: 'desc'
+      }
+    ];
+
+    // Pick a random collection type
+    const collection = collections[Math.floor(Math.random() * collections.length)];
+    const randomPage = Math.floor(Math.random() * 3) + 1;
     
     const params = new URLSearchParams({
       page: randomPage.toString(),
       categories: '111',
       purity: '100',
-      sorting: 'random',
       atleast: '1920x1080',
-      ratios: '16x9,16x10'
+      ratios: '16x9,16x10',
+      ...collection  // Spread the selected collection parameters
     });
 
     const url = `https://wallhaven.cc/api/v1/search?${params.toString()}`;
@@ -585,22 +612,23 @@ async function fetchRandomWallhavenImage() {
     
     const data = await response.json();
     
-    // Get a random wallpaper from the results
-    const randomIndex = Math.floor(Math.random() * data.data.length);
+    // Get a random wallpaper from the first 10 results
+    const maxIndex = Math.min(10, data.data.length);
+    const randomIndex = Math.floor(Math.random() * maxIndex);
     const wallpaper = data.data[randomIndex];
     
     return {
       id: wallpaper.id,
       title: `Wallpaper ${wallpaper.id}`,
-      path: wallpaper.thumbs.large, // Use thumbnail for preview
-      fullUrl: wallpaper.path, // Full resolution URL
+      path: wallpaper.thumbs.large,
+      fullUrl: wallpaper.path,
       resolution: wallpaper.resolution,
       category: wallpaper.category,
       views: wallpaper.views,
       favorites: wallpaper.favorites,
       provider: PROVIDERS.WALLHAVEN,
       loaded: false,
-      fallbackUrls: [wallpaper.thumbs.large, wallpaper.thumbs.original] // Add fallbacks
+      fallbackUrls: [wallpaper.thumbs.large, wallpaper.thumbs.original]
     };
   } catch (error) {
     console.error('Random Wallhaven fetch error:', error);
