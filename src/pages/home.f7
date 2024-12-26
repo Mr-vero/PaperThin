@@ -54,7 +54,17 @@
                 <i class="icon f7-icons">checkmark_circle_fill</i>
               </div>
             `}
-            <div class="progressive-image ${wallpaper.loaded ? 'loaded' : ''}">
+            <div class="progressive-image ${wallpaper.loaded ? 'loaded' : 'skeleton-item'}">
+              ${!wallpaper.loaded && $h`
+                <div class="skeleton-image"></div>
+                <div class="skeleton-info">
+                  <div class="skeleton-resolution"></div>
+                  <div class="skeleton-stats">
+                    <div class="skeleton-stat"></div>
+                    <div class="skeleton-stat"></div>
+                  </div>
+                </div>
+              `}
               <img 
                 class="full-image"
                 src="${wallpaper.path}" 
@@ -70,7 +80,20 @@
                 <span><i class="icon f7-icons">eye</i> ${wallpaper.views}</span>
                 <span><i class="icon f7-icons">heart</i> ${wallpaper.favorites}</span>
               </div>
-              
+            </div>
+          </div>
+        `)}
+        
+        <!-- Virtual Skeleton Items -->
+        ${Array(12).fill().map(() => $h`
+          <div class="wallpaper-item skeleton-item">
+            <div class="skeleton-image"></div>
+            <div class="skeleton-info">
+              <div class="skeleton-resolution"></div>
+              <div class="skeleton-stats">
+                <div class="skeleton-stat"></div>
+                <div class="skeleton-stat"></div>
+              </div>
             </div>
           </div>
         `)}
@@ -79,6 +102,17 @@
       <!-- Loading spinner -->
       ${loading && $h`
         <div class="preloader infinite-scroll-preloader"></div>
+      `}
+
+      ${!loading && $store.state.isBackgroundLoading && $h`
+        <div class="background-loading-indicator">
+          <div class="background-loading-text">
+            <span class="loading-dot">.</span>
+            <span class="loading-dot">.</span>
+            <span class="loading-dot">.</span>
+            Loading more from other sources
+          </div>
+        </div>
       `}
 
       ${noMoreItems && $h`
@@ -132,6 +166,7 @@ export default (props, { $f7, $store, $on, $update }) => {
   let selectedWallpapers = [];
   let longPressTimer;
   let touchMoved = false;
+  let isBackgroundLoading = false;
   
   // Define categories with proper API values
   const categories = [
@@ -240,7 +275,7 @@ export default (props, { $f7, $store, $on, $update }) => {
   }
 
   async function loadMore() {
-    if (loading || noMoreItems) return;
+    if (loading) return;
     
     loading = true;
     $update();
@@ -251,9 +286,7 @@ export default (props, { $f7, $store, $on, $update }) => {
         category: currentCategory === 'all' ? null : currentCategory
       });
       
-      if (!newWallpapers || newWallpapers.length === 0) {
-        noMoreItems = true;
-      } else {
+      if (newWallpapers && newWallpapers.length > 0) {
         wallpapers = [...wallpapers, ...newWallpapers];
         page += 1;
       }
@@ -546,6 +579,28 @@ export default (props, { $f7, $store, $on, $update }) => {
   $on('pageInit', () => {
     initializeAnimations();
     // ... existing pageInit code ...
+  });
+
+  // Update the wallpaper update listener
+  $on('pageInit', () => {
+    window.addEventListener('wallpapersUpdated', () => {
+      const newWallpapers = $store.state.wallpapers;
+      // Merge new wallpapers with existing ones, avoiding duplicates
+      wallpapers = mergeWallpapers(wallpapers, newWallpapers);
+      $update();
+    });
+  });
+
+  // Helper function to merge wallpapers avoiding duplicates
+  function mergeWallpapers(existing, newOnes) {
+    const existingIds = new Set(existing.map(w => w.id));
+    const uniqueNew = newOnes.filter(w => !existingIds.has(w.id));
+    return [...existing, ...uniqueNew];
+  }
+
+  // Cleanup listener
+  $on('pageBeforeRemove', () => {
+    window.removeEventListener('wallpapersUpdated', () => {});
   });
 
   return $render;
@@ -1004,4 +1059,131 @@ export default (props, { $f7, $store, $on, $update }) => {
 .provider-badge.unsplash { background: rgba(0, 0, 0, 0.8); }
 .provider-badge.bing { background: rgba(32, 120, 244, 0.8); }
 .provider-badge.alphacoders { background: rgba(138, 43, 226, 0.8); }
+
+/* Skeleton Loading Styles */
+.skeleton-item {
+  background: #f5f5f5;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: rgba(245, 245, 245, 0.9);
+}
+
+.skeleton-resolution {
+  width: 60px;
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.skeleton-stat {
+  width: 40px;
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Dark mode support */
+:root.theme-dark {
+  .skeleton-item {
+    background: #2c2c2c;
+  }
+  
+  .skeleton-image {
+    background: linear-gradient(90deg, #333 25%, #3a3a3a 50%, #333 75%);
+  }
+  
+  .skeleton-info {
+    background: rgba(44, 44, 44, 0.9);
+  }
+  
+  .skeleton-resolution,
+  .skeleton-stat {
+    background: #3a3a3a;
+  }
+}
+
+.background-loading-indicator {
+  text-align: center;
+  padding: 16px;
+  color: #666;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.background-loading-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.loading-dot {
+  animation: loadingDots 1.4s infinite;
+  opacity: 0.5;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loadingDots {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+:root.theme-dark {
+  .background-loading-indicator {
+    color: #999;
+  }
+}
+
+.skeleton-item {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.progressive-image.skeleton-item {
+  background: #f5f5f5;
+}
+
+:root.theme-dark {
+  .progressive-image.skeleton-item {
+    background: #2c2c2c;
+  }
+}
 </style>

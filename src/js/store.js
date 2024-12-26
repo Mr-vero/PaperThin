@@ -15,31 +15,34 @@ const store = createStore({
     wallpapers: [],
     loading: false,
     collections: [],
+    isBackgroundLoading: false,
   },
   
   actions: {
     async fetchWallpapers({ state }, { page = 1, category = null }) {
       try {
-        // Fetch from multiple providers in parallel
-        const providerPromises = [
-          fetchWallhavenImages(page, category),
+        // First, quickly fetch Wallhaven results
+        const wallhavenResults = await fetchWallhavenImages(page, category);
+        
+        // Start background fetching without waiting
+        Promise.allSettled([
           fetchUnsplashImages(page, category),
           fetchBingImages(page, category),
           fetchAlphacodersImages(page, category)
-        ];
+        ]).then(results => {
+          const additionalWallpapers = results
+            .filter(result => result.status === 'fulfilled')
+            .map(result => result.value)
+            .flat()
+            .filter(Boolean);
 
-        // Use Promise.allSettled instead of Promise.all to handle partial failures
-        const results = await Promise.allSettled(providerPromises);
-        
-        // Filter successful results and flatten
-        const combinedWallpapers = results
-          .filter(result => result.status === 'fulfilled')
-          .map(result => result.value)
-          .flat()
-          .filter(Boolean); // Remove any null/undefined items
+          if (additionalWallpapers.length > 0) {
+            state.wallpapers = [...state.wallpapers, ...additionalWallpapers];
+            window.dispatchEvent(new CustomEvent('wallpapersUpdated'));
+          }
+        });
 
-        // Shuffle array to mix providers
-        return shuffleArray(combinedWallpapers);
+        return wallhavenResults;
 
       } catch (error) {
         console.error('Error fetching wallpapers:', error);
