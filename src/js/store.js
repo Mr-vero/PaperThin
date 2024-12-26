@@ -167,16 +167,55 @@ const store = createStore({
     },
 
     async renameCollection({ state }, { id, name }) {
-      const collection = state.collections.find(c => c.id === id);
-      if (collection) {
-        collection.name = name;
-        localStorage.setItem('collections', JSON.stringify(state.collections));
+      try {
+        const collections = state.collections || [];
+        const collectionIndex = collections.findIndex(c => c.id === id);
+        
+        if (collectionIndex === -1) {
+          throw new Error('Collection not found');
+        }
+
+        // Update collection name
+        collections[collectionIndex].name = name;
+        
+        // Save to localStorage
+        localStorage.setItem('collections', JSON.stringify(collections));
+        state.collections = collections;
+
+        // Dispatch event to update UI
+        window.dispatchEvent(new CustomEvent('collectionsUpdated'));
+        
+        return collections[collectionIndex];
+      } catch (error) {
+        console.error('Error renaming collection:', error);
+        throw error;
       }
     },
 
     async deleteCollection({ state }, { id }) {
-      state.collections = state.collections.filter(c => c.id !== id);
-      localStorage.setItem('collections', JSON.stringify(state.collections));
+      try {
+        const collections = state.collections || [];
+        const collectionIndex = collections.findIndex(c => c.id === id);
+        
+        if (collectionIndex === -1) {
+          throw new Error('Collection not found');
+        }
+
+        // Remove collection
+        collections.splice(collectionIndex, 1);
+        
+        // Save to localStorage
+        localStorage.setItem('collections', JSON.stringify(collections));
+        state.collections = collections;
+
+        // Dispatch event to update UI
+        window.dispatchEvent(new CustomEvent('collectionsUpdated'));
+        
+        return true;
+      } catch (error) {
+        console.error('Error deleting collection:', error);
+        throw error;
+      }
     }
   }
 });

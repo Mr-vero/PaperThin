@@ -114,11 +114,20 @@ export default (props, { $f7, $store, $on, $update, $f7route }) => {
             onClick: () => {
               $f7.dialog.prompt('Collection Name', collection.name, async (name) => {
                 if (name.trim() && name !== collection.name) {
-                  await $store.dispatch('renameCollection', { 
-                    id: collection.id, 
-                    name 
-                  });
-                  loadCollection();
+                  try {
+                    await $store.dispatch('renameCollection', { 
+                      id: collection.id, 
+                      name 
+                    });
+                    // Reload collection to show updated name
+                    loadCollection();
+                  } catch (error) {
+                    console.error('Error renaming collection:', error);
+                    $f7.toast.show({
+                      text: 'Failed to rename collection',
+                      closeTimeout: 2000,
+                    });
+                  }
                 }
               });
             }
@@ -126,13 +135,24 @@ export default (props, { $f7, $store, $on, $update, $f7route }) => {
           {
             text: 'Delete Collection',
             color: 'red',
-            onClick: async () => {
+            onClick: () => {
               $f7.dialog.confirm(
                 'Are you sure you want to delete this collection?', 
                 'Delete Collection',
                 async () => {
-                  await $store.dispatch('deleteCollection', { id: collection.id });
-                  $f7.views.main.router.back();
+                  try {
+                    await $store.dispatch('deleteCollection', { id: collection.id });
+                    // Navigate back to collections page
+                    $f7.views.current.router.back('/collections/', {
+                      force: true
+                    });
+                  } catch (error) {
+                    console.error('Error deleting collection:', error);
+                    $f7.toast.show({
+                      text: 'Failed to delete collection',
+                      closeTimeout: 2000,
+                    });
+                  }
                 }
               );
             }
