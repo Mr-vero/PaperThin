@@ -148,6 +148,13 @@
 </template>
 <script>
   export default (props, { $f7, $update }) => {
+    // Add this at the start of the component
+    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (isDarkMode) {
+      document.documentElement.classList.add('theme-dark');
+      document.body.style.backgroundColor = '#121212';
+    }
+
     // Login screen demo data
     let username = '';
     let password = '';
@@ -173,14 +180,9 @@
 .toolbar.toolbar-bottom {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.8);
   border-top: none;
   padding-bottom: env(safe-area-inset-bottom);
   transition: transform 0.3s ease;
-}
-
-.toolbar.toolbar-bottom.toolbar-hidden {
-  transform: translateY(100%);
 }
 
 .toolbar .tab-link {
@@ -199,5 +201,14 @@
 .toolbar .tabbar-label {
   font-size: 12px;
   font-weight: 500;
+}
+
+/* Add this to prevent white flash */
+:root.theme-dark {
+  background-color: #121212;
+}
+
+body.theme-dark {
+  background-color: #121212;
 }
 </style>

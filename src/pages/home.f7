@@ -13,7 +13,7 @@
             <i class="icon material-icons if-md">search</i>
           </a>
         </div>
-        <form class="searchbar searchbar-wallpapers">
+        <form class="searchbar searchbar-wallpapers dark no-outline">
           <div class="searchbar-inner">
             <div class="searchbar-input-wrap">
               <input type="search" placeholder="Search wallpapers"/>
@@ -123,7 +123,7 @@
     </div>
 
     <!-- Categories -->
-    <div class="categories-scrollbar">
+    <div class="categories-scrollbar dark">
       <div class="categories">
         ${categories.map((category) => $h`
           <a href="#" 
@@ -630,15 +630,13 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 .categories-scrollbar {
   position: fixed;
-  bottom: calc(var(--f7-toolbar-height) + 6px);
+  bottom: var(--f7-toolbar-height);
   left: 0;
   right: 0;
-  z-index: 5000;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(5px);
+  z-index: 600;
+  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  padding: 16px 0 12px;
-  transition: transform 0.3s ease;
+  padding: 12px 0;
 }
 
 .categories {
@@ -658,41 +656,17 @@ export default (props, { $f7, $store, $on, $update }) => {
 }
 
 .category-chip {
-  padding: 10px 20px;
-  border-radius: 12px;
-  background: rgba(var(--f7-theme-color-rgb), 0.05);
-  color: var(--f7-theme-color);
-  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  margin: 0 6px;
+  font-size: 14px;
   font-weight: 500;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  border: 1px solid rgba(var(--f7-theme-color-rgb), 0.1);
-}
-
-.category-chip:active {
-  transform: scale(0.95);
+  transition: all 0.2s ease;
 }
 
 .category-chip.active {
   background: var(--f7-theme-color);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(var(--f7-theme-color-rgb), 0.3);
-}
-
-/* Special styling for NSFW categories */
-.category-chip[data-category="sketchy"],
-.category-chip[data-category="nsfw"] {
-  background: rgba(255, 75, 62, 0.05);
-  border-color: rgba(255, 75, 62, 0.1);
-  color: #ff4b3e;
-}
-
-.category-chip[data-category="sketchy"].active,
-.category-chip[data-category="nsfw"].active {
-  background: #ff4b3e;
-  color: white;
-  box-shadow: 0 4px 12px rgba(255, 75, 62, 0.3);
 }
 
 .wallpapers-grid {
@@ -846,11 +820,6 @@ export default (props, { $f7, $store, $on, $update }) => {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-.searchbar-inner {
-  background: #f5f5f5;
-  border-radius: 100px;
 }
 
 @media (max-width: 480px) {
@@ -1021,22 +990,57 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 /* Dark Mode Support */
 :root.theme-dark {
-  --f7-navbar-bg-color: rgba(30, 30, 30, 0.9);
+  --f7-navbar-bg-color: rgba(20, 20, 20, 0.95);
+  --f7-searchbar-bg-color: rgba(30, 30, 30, 0.9);
   
+  .searchbar-inner {
+    background: rgba(30, 30, 30, 0.9);
+  }
+
+  .searchbar-input {
+    background-color: rgba(30, 30, 30, 0.9);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
   .wallpaper-item {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background: #1c1c1c;
   }
   
   .category-chip {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
   
   .categories-scrollbar {
     background: linear-gradient(to bottom,
-      rgba(30, 30, 30, 0.95),
-      rgba(30, 30, 30, 0.8)
+      rgba(20, 20, 20, 0.95),
+      rgba(20, 20, 20, 0.9)
     );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .toolbar.toolbar-bottom,
+  .selection-toolbar {
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .wallpaper-info {
+    background: rgba(20, 20, 20, 0.9);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .stats {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .page {
+    background-color: #121212;
   }
 }
 
@@ -1184,6 +1188,41 @@ export default (props, { $f7, $store, $on, $update }) => {
 :root.theme-dark {
   .progressive-image.skeleton-item {
     background: #2c2c2c;
+  }
+}
+
+/* Dark Mode Overrides */
+:root.theme-dark {
+  .categories-scrollbar {
+    background: linear-gradient(to bottom,
+      rgba(20, 20, 20, 0.95),
+      rgba(20, 20, 20, 0.8)
+    );
+  }
+
+  .category-chip {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .category-chip.active {
+    background: var(--f7-theme-color);
+    color: #fff;
+    border-color: var(--f7-theme-color);
+  }
+
+  .toolbar {
+    background: rgba(20, 20, 20, 0.9);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .toolbar-inner a {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .selection-toolbar {
+    background: rgba(20, 20, 20, 0.9);
   }
 }
 </style>
