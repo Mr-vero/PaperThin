@@ -1,1 +1,37 @@
 /* Your app custom styles here */
+
+:root.theme-dark {
+  --f7-page-bg-color: #000000;
+  --f7-bars-bg-color: #1c1c1c;
+  --f7-list-bg-color: #1c1c1c;
+  --f7-list-item-bg-color: #1c1c1c;
+  --f7-block-strong-bg-color: #1c1c1c;
+  --f7-popup-bg-color: #1c1c1c;
+  --f7-panel-bg-color: #1c1c1c;
+  --f7-card-bg-color: #1c1c1c;
+}
+
+/* Ensure dark backgrounds for main elements */
+.theme-dark {
+  background-color: #000000;
+}
+
+.theme-dark .page,
+.theme-dark .page-content {
+  background-color: #000000;
+}
+
+.theme-dark .navbar,
+.theme-dark .toolbar,
+.theme-dark .searchbar {
+  background-color: #1c1c1c;
+}
+
+/* Ensure dark mode for skeleton loading states */
+.theme-dark .skeleton-item {
+  background: #1c1c1c;
+}
+
+.theme-dark .skeleton-image {
+  background: linear-gradient(90deg, #262626 25%, #1c1c1c 50%, #262626 75%);
+}

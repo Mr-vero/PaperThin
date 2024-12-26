@@ -1,12 +1,23 @@
 {
   "name": "Paper Thin",
   "short_name": "Paper Thin",
-  "description": "Paper Thin",
+  "description": "Your Daily Dose of Cool Wallpapers",
   "lang": "en-US",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#ff4b3e",
+  "orientation": "portrait",
+  "categories": ["entertainment", "personalization"],
+  "display_override": ["standalone", "fullscreen"],
+  "shortcuts": [
+    {
+      "name": "Gallery",
+      "url": "/",
+      "icons": [{ "src": "/icons/96x96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [],
   "icons": [
     {
       "src": "/icons/128x128.png",

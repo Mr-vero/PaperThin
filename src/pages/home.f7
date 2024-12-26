@@ -1432,10 +1432,14 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 /* Dark Mode Overrides */
 :root.theme-dark {
+  .page {
+    background-color: #000000;
+  }
+
   .categories-scrollbar {
     background: linear-gradient(to bottom,
-      rgba(20, 20, 20, 0.95),
-      rgba(20, 20, 20, 0.8)
+      rgba(0, 0, 0, 0.95),
+      rgba(0, 0, 0, 0.8)
     );
   }
 
@@ -1445,23 +1449,52 @@ export default (props, { $f7, $store, $on, $update }) => {
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  .category-chip.active {
-    background: var(--f7-theme-color);
-    color: #fff;
-    border-color: var(--f7-theme-color);
+  .wallpaper-item {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background: #000000;
   }
 
   .toolbar {
-    background: rgba(20, 20, 20, 0.9);
+    background: rgba(0, 0, 0, 0.9);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  .toolbar-inner a {
-    color: rgba(255, 255, 255, 0.8);
+  .selection-toolbar {
+    background: rgba(0, 0, 0, 0.9);
   }
 
-  .selection-toolbar {
-    background: rgba(20, 20, 20, 0.9);
+  .searchbar {
+    background-color: #000000;
+  }
+
+  .searchbar-inner {
+    background: #000000;
+  }
+
+  .searchbar-input {
+    background-color: #1c1c1c;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .skeleton-item {
+    background: #000000;
+  }
+  
+  .skeleton-image {
+    background: linear-gradient(90deg, #1c1c1c 25%, #262626 50%, #1c1c1c 75%);
+  }
+  
+  .skeleton-info {
+    background: rgba(0, 0, 0, 0.9);
+  }
+  
+  .skeleton-resolution,
+  .skeleton-stat {
+    background: #1c1c1c;
+  }
+
+  .gacha-card {
+    background: #000000;
   }
 }
 

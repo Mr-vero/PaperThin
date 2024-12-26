@@ -62,7 +62,9 @@ var app = new Framework7({
   // Capacitor Statusbar settings
   statusbar: {
     iosOverlaysWebView: true,
-    androidOverlaysWebView: false,
+    androidOverlaysWebView: true,
+    androidBackgroundColor: '#ececf1',
+    androidTextColor: 'white'
   },
   on: {
     init: function () {
@@ -71,6 +73,39 @@ var app = new Framework7({
         // Init capacitor APIs (see capacitor-app.js)
         capacitorApp.init(f7);
       }
+      
+      // Handle dark mode changes
+      const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      const updateTheme = (isDark) => {
+        // Update status bar color
+        document.querySelector('meta[name="theme-color"]').setAttribute(
+          'content',
+          isDark ? '#000000' : '#ececf1'
+        );
+        
+        // Update app theme
+        f7.setDarkMode(isDark);
+        
+        // Force UI update
+        document.documentElement.classList.toggle('theme-dark', isDark);
+      };
+      
+      // Initial setup
+      updateTheme(darkModeMediaQuery.matches);
+      
+      // Listen for system dark mode changes
+      darkModeMediaQuery.addEventListener('change', (e) => {
+        updateTheme(e.matches);
+      });
+
+      // Listen for manual theme toggles
+      window.addEventListener('themechange', (e) => {
+        updateTheme(e.detail.isDark);
+      });
     },
   },
 });
+
+// Export app instance
+export default app;
