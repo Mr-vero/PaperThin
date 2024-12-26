@@ -216,7 +216,27 @@ const store = createStore({
         console.error('Error deleting collection:', error);
         throw error;
       }
-    }
+    },
+
+    async fetchRandomWallpaper({ state }) {
+      try {
+        // Try Wallhaven first as it's usually faster
+        try {
+          const wallhavenResult = await fetchRandomWallhavenImage();
+          if (wallhavenResult) return wallhavenResult;
+        } catch (error) {
+          console.log('Wallhaven random fetch failed, trying Unsplash...');
+        }
+
+        // Fallback to Unsplash
+        const unsplashResult = await fetchRandomUnsplashImage();
+        return unsplashResult;
+
+      } catch (error) {
+        console.error('Error fetching random wallpaper:', error);
+        throw error;
+      }
+    },
   }
 });
 
@@ -541,6 +561,122 @@ async function searchAlphacodersImages(query) {
   } catch (error) {
     console.error('Alphacoders search error:', error);
     return [];
+  }
+}
+
+async function fetchRandomWallhavenImage() {
+  try {
+    // Get a random page between 1 and 10
+    const randomPage = Math.floor(Math.random() * 10) + 1;
+    
+    const params = new URLSearchParams({
+      page: randomPage.toString(),
+      categories: '111',
+      purity: '100',
+      sorting: 'random',
+      atleast: '1920x1080',
+      ratios: '16x9,16x10'
+    });
+
+    const url = `https://wallhaven.cc/api/v1/search?${params.toString()}`;
+    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(url)}`);
+    
+    if (!response.ok) throw new Error('Wallhaven random fetch failed');
+    
+    const data = await response.json();
+    
+    // Get a random wallpaper from the results
+    const randomIndex = Math.floor(Math.random() * data.data.length);
+    const wallpaper = data.data[randomIndex];
+    
+    return {
+      id: wallpaper.id,
+      title: `Wallpaper ${wallpaper.id}`,
+      path: wallpaper.thumbs.large, // Use thumbnail for preview
+      fullUrl: wallpaper.path, // Full resolution URL
+      resolution: wallpaper.resolution,
+      category: wallpaper.category,
+      views: wallpaper.views,
+      favorites: wallpaper.favorites,
+      provider: PROVIDERS.WALLHAVEN,
+      loaded: false,
+      fallbackUrls: [wallpaper.thumbs.large, wallpaper.thumbs.original] // Add fallbacks
+    };
+  } catch (error) {
+    console.error('Random Wallhaven fetch error:', error);
+    throw error;
+  }
+}
+
+async function fetchRandomUnsplashImage() {
+  try {
+    const url = `${CORS_PROXY}${encodeURIComponent(
+      'https://unsplash.com/napi/photos/random?orientation=landscape&count=1'
+    )}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Unsplash random fetch failed');
+    
+    const photo = await response.json();
+    
+    return {
+      id: photo.id,
+      title: photo.description || 'Unsplash Wallpaper',
+      path: photo.urls.regular, // Use regular size for better initial load
+      fullUrl: photo.urls.full,
+      resolution: `${photo.width}x${photo.height}`,
+      views: photo.views || 0,
+      favorites: photo.likes || 0,
+      provider: PROVIDERS.UNSPLASH,
+      loaded: false,
+      fallbackUrls: [photo.urls.regular, photo.urls.small]
+    };
+  } catch (error) {
+    console.error('Random Unsplash fetch error:', error);
+    throw error;
+  }
+}
+
+async function fetchRandomAlphacodersImage() {
+  try {
+    // Get a random page between 1 and 10
+    const randomPage = Math.floor(Math.random() * 10) + 1;
+    
+    const url = `${CORS_PROXY}${encodeURIComponent(
+      `https://wall.alphacoders.com/featured.php?page=${randomPage}`
+    )}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Alphacoders random fetch failed');
+    
+    const html = await response.text();
+    
+    // Extract image data using regex
+    const imageRegex = /class="thumb-container-big"[\s\S]*?<img.*?src="(.*?)".*?title="(.*?)"/g;
+    const matches = [...html.matchAll(imageRegex)];
+    
+    // Get a random wallpaper from the results
+    const randomIndex = Math.floor(Math.random() * matches.length);
+    const [_, thumbnailUrl, title] = matches[randomIndex];
+    
+    // Convert thumbnail URL to full size URL
+    const fullUrl = thumbnailUrl.replace('thumbbig-', '');
+    
+    return {
+      id: `alphacoders-random-${randomIndex}`,
+      title: title || 'Wallpaper',
+      path: thumbnailUrl, // Use thumbnail for preview
+      fullUrl: fullUrl,
+      resolution: 'HD',
+      views: Math.floor(Math.random() * 1000),
+      favorites: Math.floor(Math.random() * 100),
+      provider: PROVIDERS.ALPHACODERS,
+      loaded: false,
+      fallbackUrls: [thumbnailUrl, fullUrl]
+    };
+  } catch (error) {
+    console.error('Random Alphacoders fetch error:', error);
+    throw error;
   }
 }
 

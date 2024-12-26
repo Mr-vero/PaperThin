@@ -29,6 +29,56 @@
     <!-- Searchbar overlay -->
     <div class="searchbar-overlay"></div>
 
+    <div class="gacha-button ${gachaAnimating ? 'disabled' : ''}" @click=${triggerGacha}>
+      <i class="icon f7-icons">sparkles</i>
+      <span>Daily Gacha</span>
+    </div>
+
+    <div class="gacha-overlay ${gachaAnimating ? 'active' : ''}" @click=${handleOverlayClick}>
+      <div class="gacha-animation" @click=${(e) => e.stopPropagation()}>
+        <div class="close-button" @click=${closeGacha}>
+          <i class="icon f7-icons">xmark_circle_fill</i>
+        </div>
+        <div class="gacha-card ${gachaRevealed ? 'revealed' : ''} ${gachaLoading ? 'loading' : ''}">
+          ${gachaLoading ? $h`
+            <div class="gacha-loading">
+              <div class="magic-circle"></div>
+              <span>Finding a perfect wallpaper...</span>
+            </div>
+          ` : gachaWallpaper && $h`
+            <div class="gacha-image-container">
+              <img 
+                class="main-image ${gachaWallpaper.loaded ? 'loaded' : ''}"
+                src="${gachaWallpaper.path}"
+                alt="Gacha Wallpaper"
+                @load=${() => handleGachaImageLoad(gachaWallpaper)}
+              />
+              <div class="gacha-info">
+                <h3>You Got!</h3>
+                <p>${gachaWallpaper.title || 'Mystery Wallpaper'}</p>
+                <div class="gacha-provider">
+                  <span>From ${gachaWallpaper.provider}</span>
+                </div>
+                <div class="gacha-actions">
+                  <a href="#" class="view-button" @click=${() => openWallpaper(gachaWallpaper)}>
+                    <i class="icon f7-icons">eye_fill</i>
+                    <span>View</span>
+                  </a>
+                  <a href="#" class="try-again-button" @click=${tryAgain}>
+                    <i class="icon f7-icons">arrow_counterclockwise</i>
+                    <span>Try Again</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          `}
+        </div>
+        ${Array.from({ length: 30 }, (_, i) => $h`
+          <div class="magical-particle magical-particle-${i}"></div>
+        `)}
+      </div>
+    </div>
+
     <!-- Scrollable page content-->
     <div class="page-content hide-toolbar-on-scroll ptr-content infinite-scroll-content ${selectionMode ? 'selection-mode' : ''}" 
          @ptr:refresh=${onRefresh} 
@@ -167,6 +217,10 @@ export default (props, { $f7, $store, $on, $update }) => {
   let longPressTimer;
   let touchMoved = false;
   let isBackgroundLoading = false;
+  let gachaAnimating = false;
+  let gachaRevealed = false;
+  let gachaWallpaper = null;
+  let gachaLoading = false;
   
   // Define categories with proper API values
   const categories = [
@@ -188,6 +242,12 @@ export default (props, { $f7, $store, $on, $update }) => {
 
   // Load initial wallpapers
   loadWallpapers();
+
+  function handleGachaImageLoad(wallpaper) {
+    // Mark the image as loaded to trigger fade-in animation
+    wallpaper.loaded = true;
+    $update();
+  }
 
   async function handleCategoryClick(categoryId) {
     console.log('Category clicked:', categoryId); // Debug log
@@ -638,6 +698,112 @@ export default (props, { $f7, $store, $on, $update }) => {
   $on('pageBeforeRemove', () => {
     window.removeEventListener('wallpapersUpdated', () => {});
   });
+
+  // Separate function for getting new wallpaper
+  async function getNewWallpaper() {
+    gachaRevealed = false;
+    gachaLoading = true;
+    $update();
+
+    try {
+      const randomWallpaper = await $store.dispatch('fetchRandomWallpaper');
+      gachaWallpaper = randomWallpaper;
+      gachaLoading = false;
+      
+      // Reveal the card after a short delay
+      setTimeout(() => {
+        gachaRevealed = true;
+        $update();
+      }, 500);
+    } catch (error) {
+      console.error('Gacha error:', error);
+      $f7.toast.show({
+        text: 'Failed to get random wallpaper',
+        closeTimeout: 2000,
+      });
+    }
+  }
+
+  // Update triggerGacha to use getNewWallpaper
+  async function triggerGacha() {
+    if (gachaAnimating) return;
+    
+    gachaAnimating = true;
+    $update();
+    
+    await getNewWallpaper();
+  }
+
+  // Update the template's try-again button click handler
+  function tryAgain(e) {
+    e.preventDefault();
+    getNewWallpaper();
+  }
+
+  // Keep closeGacha for overlay and close button
+  function closeGacha() {
+    gachaAnimating = false;
+    gachaRevealed = false;
+    gachaLoading = false;
+    
+    // Wait for the overlay fade-out animation before clearing the wallpaper
+    setTimeout(() => {
+      gachaWallpaper = null;
+      $update();
+    }, 300);
+    
+    $update();
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target.classList.contains('gacha-overlay')) {
+      closeGacha();
+    }
+  }
+
+  function onGachaAnimationEnd() {
+    if (!gachaRevealed) {
+      gachaRevealed = true;
+      $update();
+    }
+  }
+
+  function handleGachaImageError(event, wallpaper) {
+    const img = event.target;
+    const currentSrc = img.src;
+    
+    // Try fallback URLs if available
+    if (wallpaper.fallbackUrls && wallpaper.fallbackUrls.length > 0) {
+      const nextUrl = wallpaper.fallbackUrls.find(url => url !== currentSrc);
+      if (nextUrl) {
+        img.src = nextUrl;
+        return;
+      }
+    }
+    
+    // If all fallbacks fail, use a placeholder
+    img.src = 'path/to/your/placeholder-image.jpg';
+  }
+
+  function handleGachaPreload(wallpaper) {
+    // Create a new image to preload the full version
+    const fullImg = new Image();
+    
+    fullImg.onload = () => {
+      // Once full version is loaded, update the main image
+      const mainImage = document.querySelector('.gacha-card .main-image');
+      if (mainImage) {
+        mainImage.src = fullImg.src;
+        wallpaper.loaded = true;
+        $update();
+      }
+    };
+
+    // Start loading the full version
+    if (wallpaper.fullUrl) {
+      fullImg.src = wallpaper.fullUrl;
+    }
+  }
 
   return $render;
 }
@@ -1295,5 +1461,248 @@ export default (props, { $f7, $store, $on, $update }) => {
   transform: scale(0);
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gacha-button {
+  position: fixed;
+  bottom: calc(var(--f7-toolbar-height) + 80px);
+  right: 16px;
+  background: var(--f7-theme-color);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(var(--f7-theme-color-rgb), 0.3);
+  z-index: 100;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.gacha-button:active {
+  transform: scale(0.95);
+}
+
+.gacha-button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.gacha-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.gacha-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gacha-animation {
+  position: relative;
+  width: 90vw;
+  max-width: 400px;
+  aspect-ratio: 2/3;
+}
+
+.gacha-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1c1c1c;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(var(--f7-theme-color-rgb), 0.3);
+  transform: scale(0.8);
+  opacity: 0;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.6s ease;
+}
+
+.gacha-card.loading {
+  opacity: 1;
+  transform: scale(1);
+  animation: floatCard 2s ease-in-out infinite;
+}
+
+.gacha-card.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.gacha-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: #fff;
+}
+
+.magic-circle {
+  width: 100px;
+  height: 100px;
+  border: 2px solid var(--f7-theme-color);
+  border-radius: 50%;
+  position: relative;
+  animation: rotateMagic 4s linear infinite;
+}
+
+.magic-circle::before,
+.magic-circle::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--f7-theme-color);
+  border-radius: 50%;
+}
+
+.magic-circle::before {
+  animation: rotateMagic 3s linear infinite reverse;
+}
+
+.magic-circle::after {
+  animation: rotateMagic 2s linear infinite;
+}
+
+.gacha-image-container {
+  position: absolute;
+  inset: 0;
+  background: #1c1c1c;
+}
+
+.gacha-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.1);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.gacha-image-container img.loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.magical-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--f7-theme-color);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.gacha-card.loading ~ .magical-particle {
+  animation: particleMagic 2s ease-out infinite;
+}
+
+.gacha-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 32px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.95),
+    rgba(0, 0, 0, 0.8) 50%,
+    transparent
+  );
+  color: #fff;
+  text-align: center;
+}
+
+.gacha-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.gacha-actions a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--f7-theme-color);
+  color: #fff;
+  border-radius: 100px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.gacha-actions a:active {
+  transform: scale(0.95);
+}
+
+.gacha-actions .try-again-button {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes floatCard {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1) translateY(-10px); }
+}
+
+@keyframes rotateMagic {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes particleMagic {
+  0% {
+    opacity: 0;
+    transform: translate(var(--tx, 0), var(--ty, 0)) scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(var(--tx, 0), var(--ty, 0)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx, 0), var(--ty, 0)) scale(0);
+  }
+}
+
+/* Generate particles with different positions and delays */
+${Array.from({ length: 30 }, (_, i) => `
+.magical-particle-${i} {
+  left: ${50 + Math.cos(i * Math.PI/15) * 150}%;
+  top: ${50 + Math.sin(i * Math.PI/15) * 150}%;
+  --tx: ${Math.cos(i * Math.PI/15) * 100}px;
+  --ty: ${Math.sin(i * Math.PI/15) * 100}px;
+  animation-delay: ${i * 0.1}s;
+}`).join('\n')}
+
+.close-button {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  z-index: 1;
+  cursor: pointer;
+}
+
+.close-button i {
+  font-size: 28px;
 }
 </style>
