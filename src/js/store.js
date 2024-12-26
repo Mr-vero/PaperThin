@@ -83,7 +83,6 @@ const store = createStore({
 
     async fetchCollections({ state }) {
       try {
-        // Get collections from localStorage
         const collectionsData = localStorage.getItem('collections');
         console.log('Raw collections data:', collectionsData);
         
@@ -95,7 +94,7 @@ const store = createStore({
         const collections = JSON.parse(collectionsData);
         console.log('Parsed collections:', collections);
         
-        // Ensure each collection has a wallpapers array
+        // Ensure each collection has required properties
         collections.forEach(collection => {
           if (!collection.wallpapers) {
             collection.wallpapers = [];
@@ -124,10 +123,46 @@ const store = createStore({
     },
 
     async addToCollection({ state }, { collectionId, wallpapers }) {
-      const collection = state.collections.find(c => c.id === collectionId);
-      if (collection) {
-        collection.wallpapers.push(...wallpapers);
-        localStorage.setItem('collections', JSON.stringify(state.collections));
+      try {
+        const collections = state.collections || [];
+        const collectionIndex = collections.findIndex(c => c.id === collectionId);
+        
+        if (collectionIndex === -1) {
+          throw new Error('Collection not found');
+        }
+
+        // Store the complete wallpaper objects with all necessary data
+        const wallpapersToAdd = wallpapers.map(w => ({
+          id: w.id,
+          title: w.title,
+          path: w.path,        // thumbnail URL
+          fullUrl: w.fullUrl,  // full resolution URL
+          resolution: w.resolution,
+          category: w.category,
+          views: w.views,
+          favorites: w.favorites,
+          provider: w.provider
+        }));
+
+        // Add new wallpapers to collection
+        collections[collectionIndex].wallpapers = [
+          ...collections[collectionIndex].wallpapers,
+          ...wallpapersToAdd
+        ];
+
+        // Remove duplicates based on wallpaper id
+        collections[collectionIndex].wallpapers = Array.from(
+          new Map(collections[collectionIndex].wallpapers.map(w => [w.id, w])).values()
+        );
+
+        // Save to localStorage
+        localStorage.setItem('collections', JSON.stringify(collections));
+        state.collections = collections;
+
+        return collections[collectionIndex];
+      } catch (error) {
+        console.error('Error adding to collection:', error);
+        throw error;
       }
     },
 

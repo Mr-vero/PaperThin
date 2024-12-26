@@ -25,12 +25,12 @@
             <div class="progressive-image ${wallpaper.loaded ? 'loaded' : ''}">
               <img 
                 class="placeholder"
-                src="${wallpaper.placeholderUrl || wallpaper.thumbnailUrl}" 
+                src="${wallpaper.path}" 
                 alt="${wallpaper.title || 'Wallpaper'}"
               />
               <img 
                 class="full-image"
-                src="${wallpaper.thumbnailUrl}" 
+                src="${wallpaper.path}" 
                 loading="lazy"
                 alt="${wallpaper.title || 'Wallpaper'}"
                 @load=${() => handleImageLoad(wallpaper)}
@@ -77,30 +77,28 @@ export default (props, { $f7, $store, $on, $update, $f7route }) => {
     $update();
   }
 
+  function handleImageError(event, wallpaper) {
+    const img = event.target;
+    // If thumbnail fails, try full URL
+    if (img.src === wallpaper.path && wallpaper.fullUrl) {
+      img.src = wallpaper.fullUrl;
+    }
+  }
+
   function openWallpaper(wallpaper) {
     $f7.views.current.router.navigate('/wallpaper/', {
       props: {
         wallpaper: {
           id: wallpaper.id,
           title: wallpaper.title,
-          fullUrl: wallpaper.fullUrl || wallpaper.thumbnailUrl,
+          fullUrl: wallpaper.fullUrl,
+          path: wallpaper.path,
           resolution: wallpaper.resolution,
           views: wallpaper.views || 0,
           favorites: wallpaper.favorites || 0
         }
       }
     });
-  }
-
-  function handleImageError(event, wallpaper) {
-    const img = event.target;
-    if (wallpaper.fallbackUrls && wallpaper.fallbackUrls.length > 0) {
-      const currentUrl = img.src;
-      const nextUrl = wallpaper.fallbackUrls.find(url => url !== currentUrl);
-      if (nextUrl) {
-        img.src = nextUrl;
-      }
-    }
   }
 
   function openActions() {

@@ -13,7 +13,6 @@
     </div>
 
     <div class="page-content">
-      <!-- Collections Grid -->
       <div class="collections-grid" style="padding-top: 80px;">
         ${collections.map((collection) => $h`
           <div class="collection-card" @click=${() => openCollection(collection.id)}>
@@ -22,11 +21,10 @@
                 collection.wallpapers.slice(0, 4).map((wallpaper) => $h`
                   <div class="preview-item">
                     <img 
-                      src="${wallpaper.thumbnailUrl || wallpaper.url}" 
-                      alt="Preview" 
+                      src="${wallpaper.path}" 
+                      alt="${wallpaper.title}"
                       loading="lazy"
-                      @error=${(e) => handleImageError(e, wallpaper)} 
-                      onerror="this.onerror=null; this.src='${wallpaper.url}'"
+                      @error=${(e) => handleImageError(e, wallpaper)}
                     />
                   </div>
                 `) : 
@@ -60,13 +58,11 @@
 export default (props, { $f7, $store, $on, $update }) => {
   let collections = [];
 
-  // Load collections on mount
   $on('pageInit', () => {
     loadCollections();
     window.addEventListener('collectionsUpdated', loadCollections);
   });
 
-  // Don't forget to cleanup
   $on('pageBeforeRemove', () => {
     window.removeEventListener('collectionsUpdated', loadCollections);
   });
@@ -74,10 +70,17 @@ export default (props, { $f7, $store, $on, $update }) => {
   async function loadCollections() {
     try {
       collections = await $store.dispatch('fetchCollections');
-      console.log('Loaded collections:', collections); // Debug log
       $update();
     } catch (error) {
       console.error('Error loading collections:', error);
+    }
+  }
+
+  function handleImageError(event, wallpaper) {
+    const img = event.target;
+    // If thumbnail fails, try full URL
+    if (img.src === wallpaper.path && wallpaper.fullUrl) {
+      img.src = wallpaper.fullUrl;
     }
   }
 
@@ -92,23 +95,6 @@ export default (props, { $f7, $store, $on, $update }) => {
 
   function openCollection(id) {
     $f7.views.current.router.navigate(`/collection/${id}/`);
-  }
-
-  function handleImageError(event, wallpaper) {
-    const img = event.target;
-    if (wallpaper.fallbackUrls && wallpaper.fallbackUrls.length > 0) {
-      const currentUrl = img.src;
-      const nextUrl = wallpaper.fallbackUrls.find(url => url !== currentUrl);
-      if (nextUrl) {
-        img.src = nextUrl;
-      } else if (wallpaper.url) {
-        // If no more fallback URLs, try the original URL
-        img.src = wallpaper.url;
-      }
-    } else if (wallpaper.url && img.src !== wallpaper.url) {
-      // If no fallback URLs, try the original URL
-      img.src = wallpaper.url;
-    }
   }
 
   return $render;
