@@ -30,8 +30,11 @@
     <div class="searchbar-overlay"></div>
 
     <div class="gacha-button ${gachaAnimating ? 'disabled' : ''}" @click=${triggerGacha}>
-      <i class="icon f7-icons">sparkles</i>
-      <span>Daily Gacha</span>
+      <div class="gacha-button-content">
+        <i class="icon f7-icons">sparkles</i>
+        <span>Random Discovery</span>
+      </div>
+      <div class="gacha-button-glow"></div>
     </div>
 
     <div class="gacha-overlay ${gachaAnimating ? 'active' : ''}" @click=${handleOverlayClick}>
@@ -42,11 +45,15 @@
         <div class="gacha-card ${gachaRevealed ? 'revealed' : ''} ${gachaLoading ? 'loading' : ''}">
           ${gachaLoading ? $h`
             <div class="gacha-loading">
-              <div class="magic-circle"></div>
-              <span>Finding a perfect wallpaper...</span>
+              <div class="magic-container">
+                <div class="magic-circle"></div>
+                <div class="magic-stars"></div>
+              </div>
+              <span class="loading-text">Finding your perfect wallpaper<span class="dots">...</span></span>
             </div>
           ` : gachaWallpaper && $h`
             <div class="gacha-image-container">
+              <div class="magical-reveal-effect"></div>
               <img 
                 class="main-image ${gachaWallpaper.loaded ? 'loaded' : ''}"
                 src="${gachaWallpaper.path}"
@@ -54,7 +61,7 @@
                 @load=${() => handleGachaImageLoad(gachaWallpaper)}
               />
               <div class="gacha-info">
-                <h3>You Got!</h3>
+                <h3>Discovered!</h3>
                 <p>${gachaWallpaper.title || 'Mystery Wallpaper'}</p>
                 <div class="gacha-provider">
                   <span>From ${gachaWallpaper.provider}</span>
@@ -73,7 +80,7 @@
             </div>
           `}
         </div>
-        ${Array.from({ length: 30 }, (_, i) => $h`
+        ${Array.from({ length: 20 }, (_, i) => $h`
           <div class="magical-particle magical-particle-${i}"></div>
         `)}
       </div>
@@ -805,6 +812,29 @@ export default (props, { $f7, $store, $on, $update }) => {
     }
   }
 
+  function handleButtonHover(e) {
+    const button = e.currentTarget;
+    const rect = button.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    button.style.setProperty('--x', `${x}%`);
+    button.style.setProperty('--y', `${y}%`);
+  }
+
+  $on('pageInit', () => {
+    const gachaButton = document.querySelector('.gacha-button');
+    if (gachaButton) {
+      gachaButton.addEventListener('mousemove', handleButtonHover);
+    }
+  });
+
+  $on('pageBeforeRemove', () => {
+    const gachaButton = document.querySelector('.gacha-button');
+    if (gachaButton) {
+      gachaButton.removeEventListener('mousemove', handleButtonHover);
+    }
+  });
+
   return $render;
 }
 </script>
@@ -1469,14 +1499,42 @@ export default (props, { $f7, $store, $on, $update }) => {
   right: 16px;
   background: var(--f7-theme-color);
   color: #fff;
-  padding: 12px 20px;
+  padding: 16px 24px;
   border-radius: 100px;
+  z-index: 100;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(var(--f7-theme-color-rgb), 0.3);
+  transition: all 0.3s ease;
+}
+
+.gacha-button-content {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(var(--f7-theme-color-rgb), 0.3);
-  z-index: 100;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.gacha-button-content i {
+  font-size: 20px;
+}
+
+.gacha-button-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--x, 50%) var(--y, 50%),
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gacha-button:hover .gacha-button-glow {
+  opacity: 1;
 }
 
 .gacha-button:active {
@@ -1549,50 +1607,127 @@ export default (props, { $f7, $store, $on, $update }) => {
   color: #fff;
 }
 
+.magic-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+}
+
 .magic-circle {
-  width: 100px;
-  height: 100px;
+  position: absolute;
+  inset: 0;
   border: 2px solid var(--f7-theme-color);
   border-radius: 50%;
-  position: relative;
   animation: rotateMagic 4s linear infinite;
 }
 
-.magic-circle::before,
-.magic-circle::after {
+.magic-circle::before {
   content: '';
   position: absolute;
-  inset: -2px;
-  border: 2px solid var(--f7-theme-color);
+  inset: -5px;
+  border: 1px solid var(--f7-theme-color);
   border-radius: 50%;
+  opacity: 0.5;
 }
 
-.magic-circle::before {
-  animation: rotateMagic 3s linear infinite reverse;
+.magic-stars {
+  position: absolute;
+  inset: -10px;
+  animation: rotateStars 8s linear infinite;
 }
 
-.magic-circle::after {
-  animation: rotateMagic 2s linear infinite;
+.magic-stars::before {
+  content: '✦';
+  position: absolute;
+  font-size: 16px;
+  color: var(--f7-theme-color);
+  animation: twinkle 1.5s ease-in-out infinite;
 }
 
-.gacha-image-container {
+.magical-reveal-effect {
   position: absolute;
   inset: 0;
-  background: #1c1c1c;
+  background: linear-gradient(45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: revealSweep 1s ease-out forwards;
 }
 
-.gacha-image-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.magic-runes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.magic-rune {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--f7-theme-color);
   opacity: 0;
-  transform: scale(1.1);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: rotate(0deg) scale(0);
 }
 
-.gacha-image-container img.loaded {
-  opacity: 1;
-  transform: scale(1);
+.rune-0 {
+  top: -30px;
+  left: 20%;
+  animation: runeFloat 3s ease-in-out infinite, runeAppear 0.5s ease-out forwards;
+}
+
+.rune-1 {
+  bottom: -20px;
+  right: 25%;
+  animation: runeFloat 3s ease-in-out infinite 0.3s, runeAppear 0.5s ease-out 0.2s forwards;
+}
+
+.rune-2 {
+  top: 40%;
+  right: -20px;
+  animation: runeFloat 3s ease-in-out infinite 0.6s, runeAppear 0.5s ease-out 0.4s forwards;
+}
+
+.loading-text {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.dots {
+  animation: loadingDots 1.4s infinite;
+}
+
+@keyframes rotateMagic {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes rotateStars {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes revealSweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes runeFloat {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(180deg) translateY(-10px); }
+}
+
+@keyframes runeAppear {
+  0% { opacity: 0; transform: scale(0); }
+  100% { opacity: 0.6; transform: scale(1); }
 }
 
 .magical-particle {
@@ -1601,66 +1736,13 @@ export default (props, { $f7, $store, $on, $update }) => {
   height: 4px;
   background: var(--f7-theme-color);
   border-radius: 50%;
+  filter: blur(1px);
   pointer-events: none;
   opacity: 0;
 }
 
 .gacha-card.loading ~ .magical-particle {
-  animation: particleMagic 2s ease-out infinite;
-}
-
-.gacha-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 32px;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.95),
-    rgba(0, 0, 0, 0.8) 50%,
-    transparent
-  );
-  color: #fff;
-  text-align: center;
-}
-
-.gacha-actions {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.gacha-actions a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: var(--f7-theme-color);
-  color: #fff;
-  border-radius: 100px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.gacha-actions a:active {
-  transform: scale(0.95);
-}
-
-.gacha-actions .try-again-button {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-@keyframes floatCard {
-  0%, 100% { transform: scale(1) translateY(0); }
-  50% { transform: scale(1) translateY(-10px); }
-}
-
-@keyframes rotateMagic {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  animation: particleMagic 1.5s ease-out infinite;
 }
 
 @keyframes particleMagic {
@@ -1669,22 +1751,28 @@ export default (props, { $f7, $store, $on, $update }) => {
     transform: translate(var(--tx, 0), var(--ty, 0)) scale(0);
   }
   50% {
-    opacity: 1;
-    transform: translate(var(--tx, 0), var(--ty, 0)) scale(1);
+    opacity: 0.8;
+    transform: translate(
+      calc(var(--tx, 0) * 1.2),
+      calc(var(--ty, 0) * 1.2)
+    ) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(var(--tx, 0), var(--ty, 0)) scale(0);
+    transform: translate(
+      calc(var(--tx, 0) * 1.5),
+      calc(var(--ty, 0) * 1.5)
+    ) scale(0);
   }
 }
 
-/* Generate particles with different positions and delays */
-${Array.from({ length: 30 }, (_, i) => `
+/* Generate more varied particles */
+${Array.from({ length: 20 }, (_, i) => `
 .magical-particle-${i} {
-  left: ${50 + Math.cos(i * Math.PI/15) * 150}%;
-  top: ${50 + Math.sin(i * Math.PI/15) * 150}%;
-  --tx: ${Math.cos(i * Math.PI/15) * 100}px;
-  --ty: ${Math.sin(i * Math.PI/15) * 100}px;
+  left: ${50 + Math.cos(i * Math.PI/10) * 100}%;
+  top: ${50 + Math.sin(i * Math.PI/10) * 100}%;
+  --tx: ${Math.cos(i * Math.PI/10) * 50}px;
+  --ty: ${Math.sin(i * Math.PI/10) * 50}px;
   animation-delay: ${i * 0.1}s;
 }`).join('\n')}
 
@@ -1704,5 +1792,100 @@ ${Array.from({ length: 30 }, (_, i) => `
 
 .close-button i {
   font-size: 28px;
+}
+
+.gacha-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gacha-image-container .main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gacha-image-container .main-image.loaded {
+  opacity: 1;
+}
+
+.gacha-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.7) 50%,
+    transparent 100%
+  );
+  color: #fff;
+  text-align: center;
+}
+
+.gacha-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.gacha-info p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.gacha-provider {
+  margin-bottom: 16px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.gacha-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.gacha-actions a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 100px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.gacha-actions a:hover {
+  transform: translateY(-2px);
+}
+
+.gacha-actions a:active {
+  transform: scale(0.95);
+}
+
+.view-button {
+  background: var(--f7-theme-color);
+  box-shadow: 0 4px 15px rgba(var(--f7-theme-color-rgb), 0.3);
+}
+
+.try-again-button {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.gacha-actions i {
+  font-size: 20px;
 }
 </style>
