@@ -46,8 +46,15 @@
           ${gachaLoading ? $h`
             <div class="gacha-loading">
               <div class="magic-container">
-                <div class="magic-circle"></div>
-                <div class="magic-stars"></div>
+                <div class="magic-circle outer"></div>
+                <div class="magic-circle inner"></div>
+                <div class="magic-circle core"></div>
+                <div class="magic-stars">
+                  <span>✦</span>
+                  <span>✦</span>
+                  <span>✦</span>
+                </div>
+                <div class="magic-sparkles"></div>
               </div>
               <span class="loading-text">Finding your perfect wallpaper<span class="dots">...</span></span>
             </div>
@@ -1609,40 +1616,139 @@ export default (props, { $f7, $store, $on, $update }) => {
 
 .magic-container {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   margin-bottom: 20px;
 }
 
 .magic-circle {
   position: absolute;
-  inset: 0;
-  border: 2px solid var(--f7-theme-color);
   border-radius: 50%;
-  animation: rotateMagic 4s linear infinite;
+  border: 2px solid var(--f7-theme-color);
 }
 
-.magic-circle::before {
-  content: '';
-  position: absolute;
-  inset: -5px;
-  border: 1px solid var(--f7-theme-color);
-  border-radius: 50%;
-  opacity: 0.5;
+.magic-circle.outer {
+  inset: -10px;
+  border-left-color: transparent;
+  animation: rotateOuter 3s linear infinite;
+}
+
+.magic-circle.inner {
+  inset: 10px;
+  border-right-color: transparent;
+  animation: rotateInner 2s linear infinite reverse;
+}
+
+.magic-circle.core {
+  inset: 30px;
+  border-top-color: transparent;
+  animation: rotateCore 1.5s linear infinite;
 }
 
 .magic-stars {
   position: absolute;
-  inset: -10px;
+  inset: 0;
   animation: rotateStars 8s linear infinite;
 }
 
-.magic-stars::before {
-  content: '✦';
+.magic-stars span {
   position: absolute;
-  font-size: 16px;
   color: var(--f7-theme-color);
+  font-size: 16px;
+}
+
+.magic-stars span:nth-child(1) {
+  top: 0;
+  left: 50%;
   animation: twinkle 1.5s ease-in-out infinite;
+}
+
+.magic-stars span:nth-child(2) {
+  top: 50%;
+  right: 0;
+  animation: twinkle 1.5s ease-in-out infinite 0.5s;
+}
+
+.magic-stars span:nth-child(3) {
+  bottom: 0;
+  left: 50%;
+  animation: twinkle 1.5s ease-in-out infinite 1s;
+}
+
+.magic-sparkles {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--f7-theme-color-rgb), 0.2) 0%,
+    transparent 70%
+  );
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes rotateOuter {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes rotateInner {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-180deg) scale(0.9); }
+  100% { transform: rotate(-360deg) scale(1); }
+}
+
+@keyframes rotateCore {
+  0% { transform: rotate(0deg); opacity: 0.5; }
+  50% { transform: rotate(180deg); opacity: 1; }
+  100% { transform: rotate(360deg); opacity: 0.5; }
+}
+
+@keyframes rotateStars {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+@keyframes twinkle {
+  0%, 100% { 
+    opacity: 0.2; 
+    transform: scale(0.8); 
+    filter: blur(0px);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2); 
+    filter: blur(1px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 0.5; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.2); 
+  }
+}
+
+.loading-text {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.dots {
+  display: inline-block;
+  animation: loadingDots 1.4s infinite;
+}
+
+@keyframes loadingDots {
+  0%, 20% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  80%, 100% { transform: translateY(0); }
 }
 
 .magical-reveal-effect {
