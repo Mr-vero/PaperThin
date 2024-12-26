@@ -338,38 +338,60 @@ export default (props, { $f7, $store, $on, $update }) => {
       on: {
         search(sb, query, previousQuery) {
           if (query.length > 2) {
-            // Show loading indicator
-            $f7.preloader.show();
+            // Clear current wallpapers and show skeleton loading state
+            wallpapers = [];
+            loading = true;
+            $update();
             
-            // Debounce search to prevent too many requests
+            // Debounce search
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
               try {
                 const searchResults = await $store.dispatch('searchWallpapers', query);
-                // Update the wallpapers array with search results
                 wallpapers = searchResults;
                 page = 1;
-                noMoreItems = true; // Disable infinite scroll for search results
-                $update(); // Force re-render
+                noMoreItems = true;
+              } catch (error) {
+                console.error('Search error:', error);
+                $f7.toast.show({
+                  text: 'Search failed. Please try again.',
+                  closeTimeout: 2000,
+                });
               } finally {
-                $f7.preloader.hide();
+                loading = false;
+                $update();
               }
             }, 300);
           }
         },
         clear(sb) {
-          // Restore original wallpapers
-          wallpapers = [...originalWallpapers];
-          page = Math.ceil(wallpapers.length / 24); // Assuming 24 items per page
-          noMoreItems = false;
+          // Show loading state briefly while restoring
+          loading = true;
+          wallpapers = [];
           $update();
+          
+          // Short timeout for smooth transition
+          setTimeout(() => {
+            wallpapers = [...originalWallpapers];
+            page = Math.ceil(wallpapers.length / 24);
+            noMoreItems = false;
+            loading = false;
+            $update();
+          }, 150);
         },
         disable() {
-          // When search bar is closed
-          wallpapers = [...originalWallpapers];
-          page = Math.ceil(wallpapers.length / 24);
-          noMoreItems = false;
+          // Show loading state briefly while restoring
+          loading = true;
+          wallpapers = [];
           $update();
+          
+          setTimeout(() => {
+            wallpapers = [...originalWallpapers];
+            page = Math.ceil(wallpapers.length / 24);
+            noMoreItems = false;
+            loading = false;
+            $update();
+          }, 150);
         }
       }
     });
