@@ -3,33 +3,232 @@
   <div class="navbar">
     <div class="navbar-bg"></div>
     <div class="navbar-inner sliding">
-      <div class="left">
-        <a href="#" class="link back">
-          <i class="icon icon-back"></i>
-          <span class="if-not-md">Back</span>
-        </a>
-      </div>
       <div class="title">About</div>
     </div>
   </div>
   <div class="page-content">
-    <div class="block-title">About My App</div>
-    <div class="block">
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magni molestiae laudantium dignissimos est nobis
-        delectus nemo ea alias voluptatum architecto, amet similique, saepe iste consectetur in repellat ut minus
-        quibusdam!</p>
-      <p>Molestias et distinctio porro nesciunt ratione similique, magni doloribus, rerum nobis, aliquam quae reiciendis
-        quasi modi. Nam a recusandae, fugiat in ea voluptates fuga eius, velit corrupti reprehenderit dignissimos
-        consequatur!</p>
-      <p>Blanditiis, cumque quo adipisci. Molestiae, dolores dolorum quos doloremque ipsa ullam eligendi commodi
-        deserunt doloribus inventore magni? Ea mollitia veniam nostrum nihil, iusto doloribus a at! Ea molestiae ullam
-        delectus!</p>
+    <!-- App Header -->
+    <div class="app-header" style="margin-top: 70px;">
+      <div class="app-icon">
+        <img src="/icons/128x128.png" alt="Paper Thin Icon"/>
+      </div>
+      <div class="app-title">Paper Thin</div>
+      <div class="app-subtitle">Your Daily Dose of Cool Wallpapers</div>
+      <div class="app-version">Version 1.0.0</div>
+    </div>
+
+    <!-- What's New Section -->
+    <div class="block-title block-title-medium">What's New</div>
+    <div class="card">
+      <div class="card-content card-content-padding">
+        <div class="version-header">
+          <span class="version-number">Version 1.0.0</span>
+          <span class="version-date">December 27, 2024</span>
+        </div>
+        <div class="version-changes">
+          <ul>
+            <li>🎉 First release!</li>
+            <li>✨ Tons of amazing wallpapers to discover</li>
+            <li>📱 Super easy to save and use</li>
+            <li>🎨 Create your own collections</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="block-title block-title-medium">Cool Stuff You Can Do</div>
+    <div class="features-list">
+      <div class="feature-item">
+        <div class="feature-icon">
+          <i class="icon f7-icons">square_grid_2x2_fill</i>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Find Your Style</div>
+          <div class="feature-description">
+            Browse through endless awesome wallpapers - from cute to epic!
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-icon">
+          <i class="icon f7-icons">rectangle_stack_fill</i>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Save Your Favorites</div>
+          <div class="feature-description">
+            Keep all your favorite wallpapers in one place, nice and organized
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-icon">
+          <i class="icon f7-icons">arrow_down_circle</i>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Quick & Easy</div>
+          <div class="feature-description">
+            Preview and set new wallpapers in seconds - no hassle!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Links Section -->
+    <div class="block-title block-title-medium">Links & Info</div>
+    <div class="list list-strong-ios inset list-dividers-ios">
+      <ul>
+        <li>
+          <a href="https://github.com/Mr-vero/PaperThin" class="item-link item-content external">
+            <div class="item-media">
+              <i class="icon f7-icons">logo_github</i>
+            </div>
+            <div class="item-inner">
+              <div class="item-title">Check out my GitHub page for more</div>
+              <div class="item-after">
+                <i class="icon f7-icons">arrow_up_right_square</i>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Developer Section -->
+    <div class="block text-align-center developer-section">
+      <p class="developer-text">Made with <i class="icon f7-icons color-red">heart_fill</i> by Irvan Smith</p>
+      <p class="developer-text">Hope you enjoy using it! 😊</p>
     </div>
   </div>
 </div>
 </template>
+
+<style>
+.app-header {
+  padding: 32px 16px;
+  text-align: center;
+  background: var(--f7-page-bg-color);
+}
+
+.app-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.app-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.app-subtitle {
+  font-size: 17px;
+  color: var(--f7-theme-color);
+  margin-bottom: 8px;
+}
+
+.app-version {
+  font-size: 13px;
+  color: var(--f7-block-footer-text-color);
+}
+
+.version-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.version-number {
+  font-weight: 600;
+}
+
+.version-date {
+  color: var(--f7-block-footer-text-color);
+  font-size: 14px;
+}
+
+.version-changes ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.version-changes li {
+  margin-bottom: 8px;
+  color: var(--f7-text-color);
+}
+
+.features-list {
+  padding: 16px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  background: var(--f7-card-bg-color);
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.feature-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--f7-theme-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.feature-icon i {
+  color: #fff;
+  font-size: 20px;
+}
+
+.feature-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.feature-description {
+  font-size: 14px;
+  color: var(--f7-block-footer-text-color);
+  line-height: 1.4;
+}
+
+.developer-section {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.developer-text {
+  font-size: 13px;
+  color: var(--f7-block-footer-text-color);
+}
+
+.developer-text i {
+  font-size: 12px;
+  vertical-align: middle;
+}
+</style>
+
 <script>
 export default () => {
   return $render;
-};
-</script>
+}
+</script> 
