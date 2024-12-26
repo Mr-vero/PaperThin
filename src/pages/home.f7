@@ -1410,9 +1410,9 @@ export default (props, { $f7, $store, $on, $update }) => {
   }
 }
 
-.skeleton-item {
+/* .skeleton-item {
   animation: pulse 2s infinite;
-}
+} */
 
 @keyframes pulse {
   0% { opacity: 1; }

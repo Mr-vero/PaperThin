@@ -1,6 +1,6 @@
 module.exports = {
   globDirectory: 'www/',
-  globPatterns: ['**/*.{woff,woff2,js,css,png,jpg,svg,html}'],
+  globPatterns: ['**/*.{woff,woff2,js,css,png,jpg,svg,html,json}'],
   /* pass array of globs to exclude from caching */
   globIgnores: [],
   ignoreURLParametersMatching: [/^utm_/, /^fbclid$/],
