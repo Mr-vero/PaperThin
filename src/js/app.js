@@ -74,7 +74,7 @@ var app = new Framework7({
         capacitorApp.init(f7);
       }
       
-      // Handle dark mode changes
+      Handle dark mode changes
       const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       
       const updateTheme = (isDark) => {

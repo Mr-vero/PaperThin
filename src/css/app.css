@@ -1,14 +1,14 @@
 /* Your app custom styles here */
 
+:root {
+  --f7-navbar-bg-color: #ffffff;
+  --f7-bars-bg-color: #ffffff;
+}
+
 :root.theme-dark {
+  --f7-navbar-bg-color: #000000;
+  --f7-bars-bg-color: #000000;
   --f7-page-bg-color: #000000;
-  --f7-bars-bg-color: #1c1c1c;
-  --f7-list-bg-color: #1c1c1c;
-  --f7-list-item-bg-color: #1c1c1c;
-  --f7-block-strong-bg-color: #1c1c1c;
-  --f7-popup-bg-color: #1c1c1c;
-  --f7-panel-bg-color: #1c1c1c;
-  --f7-card-bg-color: #1c1c1c;
 }
 
 /* Ensure dark backgrounds for main elements */

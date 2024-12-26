@@ -66,9 +66,11 @@
 </script>
 <style>
 .toolbar.toolbar-bottom {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  background-color: var(--f7-page-bg-color);
   padding-bottom: env(safe-area-inset-bottom);
   transition: transform 0.3s ease;
 }
@@ -98,5 +100,12 @@
 
 body.theme-dark {
   background-color: #121212;
+}
+
+/* Dark mode updates */
+:root.theme-dark {
+  .toolbar.toolbar-bottom {
+    background: #000000;
+  }
 }
 </style>
