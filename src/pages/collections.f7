@@ -22,10 +22,11 @@
                 collection.wallpapers.slice(0, 4).map((wallpaper) => $h`
                   <div class="preview-item">
                     <img 
-                      src="${wallpaper.thumbnailUrl}" 
+                      src="${wallpaper.thumbnailUrl || wallpaper.url}" 
                       alt="Preview" 
                       loading="lazy"
                       @error=${(e) => handleImageError(e, wallpaper)} 
+                      onerror="this.onerror=null; this.src='${wallpaper.url}'"
                     />
                   </div>
                 `) : 
@@ -62,11 +63,22 @@ export default (props, { $f7, $store, $on, $update }) => {
   // Load collections on mount
   $on('pageInit', () => {
     loadCollections();
+    window.addEventListener('collectionsUpdated', loadCollections);
+  });
+
+  // Don't forget to cleanup
+  $on('pageBeforeRemove', () => {
+    window.removeEventListener('collectionsUpdated', loadCollections);
   });
 
   async function loadCollections() {
-    collections = await $store.dispatch('fetchCollections');
-    $update();
+    try {
+      collections = await $store.dispatch('fetchCollections');
+      console.log('Loaded collections:', collections); // Debug log
+      $update();
+    } catch (error) {
+      console.error('Error loading collections:', error);
+    }
   }
 
   function createCollection() {
@@ -89,7 +101,13 @@ export default (props, { $f7, $store, $on, $update }) => {
       const nextUrl = wallpaper.fallbackUrls.find(url => url !== currentUrl);
       if (nextUrl) {
         img.src = nextUrl;
+      } else if (wallpaper.url) {
+        // If no more fallback URLs, try the original URL
+        img.src = wallpaper.url;
       }
+    } else if (wallpaper.url && img.src !== wallpaper.url) {
+      // If no fallback URLs, try the original URL
+      img.src = wallpaper.url;
     }
   }
 

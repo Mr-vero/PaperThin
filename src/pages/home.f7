@@ -466,11 +466,19 @@ export default (props, { $f7, $store, $on, $update }) => {
               collectionId: c.id,
               wallpapers: selectedWallpapers
             });
+            
+            // Force update collections in store
+            await $store.dispatch('fetchCollections');
+            
             $f7.toast.show({
               text: 'Added to collection',
               position: 'bottom',
               closeTimeout: 2000
             });
+            
+            // Emit an event to notify collections page
+            window.dispatchEvent(new CustomEvent('collectionsUpdated'));
+            
             cancelSelection();
           } catch (error) {
             $f7.toast.show({
@@ -483,11 +491,10 @@ export default (props, { $f7, $store, $on, $update }) => {
         }
       })));
       
-      // Add separator
       buttons.push({ text: '', label: true });
     }
     
-    // Add "New Collection" button
+    // Add "New Collection" button with similar updates
     buttons.push({
       text: '<span class="color-primary">New Collection</span>',
       bold: true,
@@ -518,6 +525,13 @@ export default (props, { $f7, $store, $on, $update }) => {
                     collectionId: collection.id,
                     wallpapers: selectedWallpapers
                   });
+                  
+                  // Force update collections in store
+                  await $store.dispatch('fetchCollections');
+                  
+                  // Emit update event
+                  window.dispatchEvent(new CustomEvent('collectionsUpdated'));
+                  
                   $f7.toast.show({
                     text: 'Created collection and added wallpapers',
                     position: 'bottom',
@@ -964,8 +978,8 @@ export default (props, { $f7, $store, $on, $update }) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
-  transform: scale(0.8);
+  z-index: 2;
+  transform: scale(0);
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -1246,5 +1260,40 @@ export default (props, { $f7, $store, $on, $update }) => {
   .selection-toolbar {
     background: rgba(20, 20, 20, 0.9);
   }
+}
+
+.selection-mode .wallpaper-item .selection-checkbox {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.selection-mode .wallpaper-item {
+  position: relative;
+}
+
+.selection-mode .wallpaper-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.selection-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 </style>
