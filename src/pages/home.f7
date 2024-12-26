@@ -32,7 +32,6 @@
     <div class="gacha-button ${gachaAnimating ? 'disabled' : ''}" @click=${triggerGacha}>
       <div class="gacha-button-content">
         <i class="icon f7-icons">sparkles</i>
-        <span>Random Discovery</span>
       </div>
       <div class="gacha-button-glow"></div>
     </div>
@@ -1536,11 +1535,12 @@ export default (props, { $f7, $store, $on, $update }) => {
 .gacha-button {
   position: fixed;
   bottom: calc(var(--f7-toolbar-height) + 80px);
-  right: 16px;
+  right: 50%;
+  transform: translateX(50%);
   background: var(--f7-theme-color);
   color: #fff;
-  padding: 16px 24px;
-  border-radius: 100px;
+  padding: 16px;
+  border-radius: 50%;
   z-index: 100;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(var(--f7-theme-color-rgb), 0.3);
@@ -1551,14 +1551,16 @@ export default (props, { $f7, $store, $on, $update }) => {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
-  font-weight: 500;
+  justify-content: center;
   z-index: 1;
 }
 
 .gacha-button-content i {
-  font-size: 20px;
+  font-size: 24px;
+}
+
+.gacha-button:active {
+  transform: translateX(50%) scale(0.95);
 }
 
 .gacha-button-glow {
@@ -1578,7 +1580,7 @@ export default (props, { $f7, $store, $on, $update }) => {
 }
 
 .gacha-button:active {
-  transform: scale(0.95);
+  transform: translateX(50%) scale(0.95);
 }
 
 .gacha-button.disabled {
