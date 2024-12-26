@@ -86,7 +86,20 @@
               <i class="icon f7-icons">logo_github</i>
             </div>
             <div class="item-inner">
-              <div class="item-title">Check out my GitHub page for more</div>
+              <div class="item-title">Check us out on GitHub</div>
+              <div class="item-after">
+                <i class="icon f7-icons">arrow_up_right_square</i>
+              </div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="https://instagram.com/mr-vero" class="item-link item-content external">
+            <div class="item-media">
+              <i class="icon f7-icons">logo_instagram</i>
+            </div>
+            <div class="item-inner">
+              <div class="item-title">Follow me on Instagram</div>
               <div class="item-after">
                 <i class="icon f7-icons">arrow_up_right_square</i>
               </div>
@@ -94,6 +107,14 @@
           </a>
         </li>
       </ul>
+    </div>
+
+    <!-- Feature Request Section -->
+    <div class="block-title block-title-medium">Got Ideas?</div>
+    <div class="block block-strong inset text-align-center">
+      <p>Want new features? Have suggestions? 💡</p>
+      <p>Feel free to DM me on Instagram <a href="https://instagram.com/mr-vero" class="external">@mr-vero</a>!</p>
+      <p>I'd love to hear from you 😊</p>
     </div>
 
     <!-- Developer Section -->
